@@ -1,0 +1,131 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/5/CPU.hdl
+/**
+ * The Hack Central Processing unit (CPU).
+ * Parses the binary code in the instruction input and executes it according to the
+ * Hack machine language specification. In the case of a C-instruction, computes the
+ * function specified by the instruction. If the instruction specifies to read a memory
+ * value, the inM input is expected to contain this value. If the instruction specifies
+ * to write a value to the memory, sets the outM output to this value, sets the addressM
+ * output to the target address, and asserts the writeM output (when writeM = 0, any
+ * value may appear in outM).
+ * If the reset input is 0, computes the address of the next instruction and sets the
+ * pc output to that value. If the reset input is 1, sets pc to 0.
+ * Note: The outM and writeM outputs are combinational: they are affected by the
+ * instruction's execution during the current cycle. The addressM and pc outputs are
+ * clocked: although they are affected by the instruction's execution, they commit to
+ * their new values only in the next cycle.
+ */
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+
+    // 1 x  x  a  c  c  c c c c d d d j j j
+    //   14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+
+    PARTS:
+    Mux16(
+        b=instruction, 
+        sel=true,
+
+        out[15]=isC,
+        // 12th bit of instruction signifyies the place from which ALU should read data:
+        // 1 - from memory
+        // 0 - from A-register
+        out[12]=readFromMemory,
+
+        out[11]=zxF,
+        out[10]=nxF,
+        out[9]=zyF,
+        out[8]=nyF,
+        out[7]=fF,
+        out[6]=noF,
+
+        out[5]=writeToA,
+        out[4]=writeToD,
+        out[3]=writeToRAM,
+
+        out[0..2]=jumpBits
+    );
+    
+    Not(in=isC, out=isA);
+    
+    Mux16(
+        a=aluOut,
+        b=instruction,
+        sel=isA,
+        
+        out=aInstruction
+    );
+
+    Or(a=isA, b=writeToA, out=loadToA);
+    ARegister(
+        in=aInstruction, 
+        load=loadToA,
+        
+        out=aRegisterOut,
+        out[0..14]=addressM
+    );
+
+    And(a=isC, b=writeToD, out=loadToD);
+    DRegister(in=aluOut, load=loadToD, out=dRegisterOut);
+
+    And(a=isC, b=readFromMemory, out=memoryRead);
+    Mux16(a=aRegisterOut, b=inM, sel=memoryRead, out=memoryOrAOut);    
+
+    ALU(
+        x=dRegisterOut,
+        y=memoryOrAOut,
+        
+        zx=zxF, nx=nxF, zy=zyF,
+        ny=nyF, f=fF, no=noF,
+        
+        out=aluOut,
+        zr=zero,
+        ng=lessThanZero
+    );
+
+    And(a=isC, b=writeToRAM, out=reallyWrite);
+    Mux16(b=aluOut, sel=reallyWrite, out=outM);
+    Mux(a=false, b=true, sel=reallyWrite, out=writeM);
+
+    Not(in=zero, out=notEqZero);
+    Or(a=zero, b=lessThanZero, out=lessThanOrEqZero);
+    Not(in=lessThanOrEqZero, out=greaterThanZero);
+    Not(in=lessThanZero, out=graterThanOrEqZero);
+
+    Mux8Way16(
+        a[0]=false, 
+        b[0]=greaterThanZero,
+        c[0]=zero, 
+        d[0]=graterThanOrEqZero, 
+        e[0]=lessThanZero, 
+        f[0]=notEqZero, 
+        g[0]=lessThanOrEqZero, 
+        h[0]=true,
+        sel=jumpBits,
+        
+        out[0]=toJump
+    );
+
+    And(a=isC, b=toJump, out=loadFromA);
+    Not(in=loadFromA, out=toIncrement);
+    PC(
+        in=aRegisterOut, load=loadFromA, 
+        inc=toIncrement, reset=reset, 
+        
+        out[0..14]=pc
+    );
+}
