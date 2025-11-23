@@ -75,6 +75,14 @@ const (
 	SegmentTemp     = "temp"
 )
 
+var SegmentsMnemonics = map[string]string{
+	SegmentArgument: "@ARG",
+	SegmentLocal:    "@LCL",
+	SegmentThis:     "@THIS",
+	SegmentThat:     "@THAT",
+	SegmentTemp:     "@TEMP",
+}
+
 var pushes = map[string]struct{}{
 	SegmentArgument: {},
 	SegmentLocal:    {},
