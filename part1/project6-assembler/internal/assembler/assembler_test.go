@@ -1,6 +1,7 @@
 package assembler_test
 
 import (
+	"assembler/internal/assembler"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,7 +28,7 @@ var _ = Describe("Assembler", func() {
 				err = os.WriteFile(tmpAsmPath, asmContent, 0600)
 				Expect(err).NotTo(HaveOccurred())
 
-				Translate(tmpAsmPath)
+				assembler.Translate(tmpAsmPath)
 
 				tmpHackPath := filepath.Join(tmpDir, filepath.Base(asmFile[:len(asmFile)-4]+".hack"))
 				generatedContent, err := os.ReadFile(tmpHackPath)
