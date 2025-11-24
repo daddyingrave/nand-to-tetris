@@ -55,6 +55,7 @@ func LineFromPush(segment string, index int, fileName string) (string, error) {
 	sb.WriteString("D=A+1\n")
 	sb.WriteString("@SP\n")
 	sb.WriteString("M=D\n")
+	sb.WriteString("\n")
 
 	return sb.String(), nil
 }
@@ -110,6 +111,8 @@ func LineFromPop(segment string, index int, fileName string) (string, error) {
 	// 6. Decrement stack pointer
 	sb.WriteString("@SP\n")
 	sb.WriteString("M=M-1\n")
+
+	sb.WriteString("\n")
 
 	return sb.String(), nil
 }

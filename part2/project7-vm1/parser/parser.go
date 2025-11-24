@@ -95,12 +95,13 @@ var pushes = map[string]struct{}{
 }
 
 var pops = map[string]struct{}{
-	SegmentLocal:   {},
-	SegmentStatic:  {},
-	SegmentThis:    {},
-	SegmentThat:    {},
-	SegmentPointer: {},
-	SegmentTemp:    {},
+	SegmentArgument: {},
+	SegmentLocal:    {},
+	SegmentStatic:   {},
+	SegmentThis:     {},
+	SegmentThat:     {},
+	SegmentPointer:  {},
+	SegmentTemp:     {},
 }
 
 type parser struct {

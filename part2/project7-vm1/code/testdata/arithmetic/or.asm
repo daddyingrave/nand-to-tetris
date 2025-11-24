@@ -12,5 +12,5 @@ A=A-1
 M=D
 D=A
 @SP
-@M=D
+M=D
 
