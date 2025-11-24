@@ -9,8 +9,8 @@ import (
 )
 
 type Writer interface {
-	WriteArithmetic(command string)
-	WritePushPop(commandType parser.CommandType, segment string, index int)
+	WriteArithmetic(command string) error
+	WritePushPop(commandType parser.CommandType, segment string, index int) error
 	io.Closer
 }
 
@@ -39,14 +39,53 @@ func NewWriter(path string) (Writer, error) {
 	return writer{asmFile: asmFile}, nil
 }
 
-func (r writer) WriteArithmetic(command string) {
-	//TODO implement me
-	panic("implement me")
+func (r writer) WriteArithmetic(command string) error {
+	writeF := Mappings[command]
+	if writeF == nil {
+		return fmt.Errorf("unknown command '%s'", command)
+	}
+
+	if _, err := r.asmFile.WriteString(writeF()); err != nil {
+		return fmt.Errorf("fail to write command '%s' to file %w", command, err)
+	}
+
+	return nil
 }
 
-func (r writer) WritePushPop(commandType parser.CommandType, segment string, index int) {
-	//TODO implement me
-	panic("implement me")
+var staticMappings = map[string]int{}
+
+func (r writer) WritePushPop(commandType parser.CommandType, segment string, index int) error {
+	var err error
+	var generatedCode string
+
+	if segment == parser.SegmentStatic {
+		staticMappings[r.asmFile.Name()]++
+	}
+
+	switch commandType {
+	case parser.Push:
+		generatedCode, err = LineFromPush(segment, index, r.asmFile.Name())
+	case parser.Pop:
+		generatedCode, err = LineFromPop(segment, index, r.asmFile.Name())
+	default:
+		return fmt.Errorf("unsupported command type '%s'", commandType.String())
+	}
+
+	if err != nil {
+		return fmt.Errorf(
+			"fail to write command '%s', segment '%s', index '%d', to file '%s'",
+			commandType.String(), segment, index, r.asmFile.Name(),
+		)
+	}
+
+	if _, err := r.asmFile.WriteString(generatedCode); err != nil {
+		return fmt.Errorf(
+			"fail to write command '%s' segment '%s', index '%d', to file '%s' %w",
+			commandType.String(), segment, index, r.asmFile.Name(), err,
+		)
+	}
+
+	return nil
 }
 
 func (r writer) Close() error {

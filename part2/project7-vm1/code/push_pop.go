@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func LineFromPush(segment string, index int, fileName string, staticIndex int) (string, error) {
+func LineFromPush(segment string, index int, fileName string) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("// push segment: %s, index %d\n\n", segment, index))
 
@@ -26,7 +26,7 @@ func LineFromPush(segment string, index int, fileName string, staticIndex int) (
 		sb.WriteString("D=M\n")
 
 	case parser.SegmentStatic:
-		staticLabel := strings.ReplaceAll(fileName, ".asm", fmt.Sprintf(".%d", staticIndex))
+		staticLabel := strings.ReplaceAll(fileName, ".asm", fmt.Sprintf(".%d", index))
 		staticLabel = fmt.Sprintf("@%s", staticLabel)
 		sb.WriteString(staticLabel + "\n")
 		sb.WriteString("D=M\n")
@@ -59,7 +59,7 @@ func LineFromPush(segment string, index int, fileName string, staticIndex int) (
 	return sb.String(), nil
 }
 
-func LineFromPop(segment string, index int, fileName string, staticIndex int) (string, error) {
+func LineFromPop(segment string, index int, fileName string) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("// pop segment: %s, index %d\n\n", segment, index))
 
@@ -78,7 +78,7 @@ func LineFromPop(segment string, index int, fileName string, staticIndex int) (s
 		sb.WriteString("D=D+M\n")
 
 	case parser.SegmentStatic:
-		staticLabel := strings.ReplaceAll(fileName, ".asm", fmt.Sprintf(".%d", staticIndex))
+		staticLabel := strings.ReplaceAll(fileName, ".asm", fmt.Sprintf(".%d", index))
 		staticLabel = fmt.Sprintf("@%s", staticLabel)
 		sb.WriteString(staticLabel + "\n")
 		sb.WriteString("D=A\n")
