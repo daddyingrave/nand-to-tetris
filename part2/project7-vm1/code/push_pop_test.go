@@ -1,0 +1,81 @@
+package code_test
+
+import (
+	"os"
+	"project7-vm1/code"
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+func TestPushPop(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "PushPop Suite")
+}
+
+var _ = Describe("PushPop", func() {
+	Describe("LineFromPush", func() {
+		It("should generate correct assembly for push constant", func() {
+			result, err := code.LineFromPush("constant", 10, "test.asm", 0)
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/push_constant_10.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+
+		It("should generate correct assembly for push local", func() {
+			result, err := code.LineFromPush("local", 5, "test.asm", 0)
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/push_local_5.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+
+		It("should generate correct assembly for push static", func() {
+			result, err := code.LineFromPush("static", 3, "test.asm", 3)
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/push_static_3.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+	})
+
+	Describe("LineFromPop", func() {
+		It("should generate correct assembly for pop local", func() {
+			result, err := code.LineFromPop("local", 2, "test.asm", 0)
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/pop_local_2.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+
+		It("should generate correct assembly for pop argument", func() {
+			result, err := code.LineFromPop("argument", 1, "test.asm", 0)
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/pop_argument_1.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+
+		It("should generate correct assembly for pop static", func() {
+			result, err := code.LineFromPop("static", 7, "test.asm", 7)
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/pop_static_7.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+	})
+})
