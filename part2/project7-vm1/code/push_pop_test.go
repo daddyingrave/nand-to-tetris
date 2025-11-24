@@ -14,7 +14,7 @@ var _ = Describe("PushPop", func() {
 			result, err := code.LineFromPush("constant", 10, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
-			expected, err := os.ReadFile("testdata/push_constant_10.asm")
+			expected, err := os.ReadFile("testdata/push_pop/push_constant_10.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result).To(Equal(string(expected)))
@@ -24,7 +24,7 @@ var _ = Describe("PushPop", func() {
 			result, err := code.LineFromPush("local", 5, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
-			expected, err := os.ReadFile("testdata/push_local_5.asm")
+			expected, err := os.ReadFile("testdata/push_pop/push_local_5.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result).To(Equal(string(expected)))
@@ -34,7 +34,7 @@ var _ = Describe("PushPop", func() {
 			result, err := code.LineFromPush("static", 3, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
-			expected, err := os.ReadFile("testdata/push_static_3.asm")
+			expected, err := os.ReadFile("testdata/push_pop/push_static_3.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result).To(Equal(string(expected)))
@@ -46,7 +46,7 @@ var _ = Describe("PushPop", func() {
 			result, err := code.LineFromPop("local", 2, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
-			expected, err := os.ReadFile("testdata/pop_local_2.asm")
+			expected, err := os.ReadFile("testdata/push_pop/pop_local_2.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result).To(Equal(string(expected)))
@@ -56,7 +56,7 @@ var _ = Describe("PushPop", func() {
 			result, err := code.LineFromPop("argument", 1, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
-			expected, err := os.ReadFile("testdata/pop_argument_1.asm")
+			expected, err := os.ReadFile("testdata/push_pop/pop_argument_1.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result).To(Equal(string(expected)))
@@ -66,7 +66,7 @@ var _ = Describe("PushPop", func() {
 			result, err := code.LineFromPop("static", 7, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
-			expected, err := os.ReadFile("testdata/pop_static_7.asm")
+			expected, err := os.ReadFile("testdata/push_pop/pop_static_7.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result).To(Equal(string(expected)))
