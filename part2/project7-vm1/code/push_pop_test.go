@@ -39,6 +39,26 @@ var _ = Describe("PushPop", func() {
 
 			Expect(result).To(Equal(string(expected)))
 		})
+
+		It("should generate correct assembly for push pointer 0 (THIS)", func() {
+			result, err := code.StackPush("pointer", 0, "test.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/push_pop/push_pointer_0.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+
+		It("should generate correct assembly for push pointer 1 (THAT)", func() {
+			result, err := code.StackPush("pointer", 1, "test.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/push_pop/push_pointer_1.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
 	})
 
 	Describe("StackPop", func() {
@@ -67,6 +87,26 @@ var _ = Describe("PushPop", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			expected, err := os.ReadFile("testdata/push_pop/pop_static_7.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+
+		It("should generate correct assembly for pop pointer 0 (THIS)", func() {
+			result, err := code.StackPop("pointer", 0, "test.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/push_pop/pop_pointer_0.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result).To(Equal(string(expected)))
+		})
+
+		It("should generate correct assembly for pop pointer 1 (THAT)", func() {
+			result, err := code.StackPop("pointer", 1, "test.asm")
+			Expect(err).NotTo(HaveOccurred())
+
+			expected, err := os.ReadFile("testdata/push_pop/pop_pointer_1.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result).To(Equal(string(expected)))

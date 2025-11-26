@@ -10,14 +10,18 @@ func StackPush(segment string, index int, fileName string) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("// push segment: %s, index %d\n\n", segment, index))
 
-	if parser.SegmentPointer == segment && index == 0 {
-		segment = parser.SegmentThis
-	} else if parser.SegmentPointer == segment && index == 1 {
-		segment = parser.SegmentThat
-	}
-
 	// 1. Read value from a memory segment
 	switch segment {
+	case parser.SegmentPointer:
+		if index == 0 {
+			sb.WriteString(parser.SegmentsMnemonics[parser.SegmentThis] + "\n")
+		} else if index == 1 {
+			sb.WriteString(parser.SegmentsMnemonics[parser.SegmentThat] + "\n")
+		} else {
+			return "", fmt.Errorf("impossible index '%d' for pointer segment in file '%s'", index, fileName)
+		}
+		sb.WriteString("D=M\n")
+
 	case parser.SegmentArgument, parser.SegmentLocal, parser.SegmentThis, parser.SegmentThat:
 		sb.WriteString(parser.SegmentsMnemonics[segment] + "\n")
 		sb.WriteString("D=M\n")
@@ -64,14 +68,18 @@ func StackPop(segment string, index int, fileName string) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("// pop segment: %s, index %d\n\n", segment, index))
 
-	if parser.SegmentPointer == segment && index == 0 {
-		segment = parser.SegmentThis
-	} else if parser.SegmentPointer == segment && index == 1 {
-		segment = parser.SegmentThat
-	}
-
 	// 1. Define address in memory
 	switch segment {
+	case parser.SegmentPointer:
+		if index == 0 {
+			sb.WriteString(parser.SegmentsMnemonics[parser.SegmentThis] + "\n")
+		} else if index == 1 {
+			sb.WriteString(parser.SegmentsMnemonics[parser.SegmentThat] + "\n")
+		} else {
+			return "", fmt.Errorf("impossible index '%d' for pointer segment in file '%s'", index, fileName)
+		}
+		sb.WriteString("D=A\n")
+
 	case parser.SegmentArgument, parser.SegmentLocal, parser.SegmentThis, parser.SegmentThat:
 		sb.WriteString(parser.SegmentsMnemonics[segment] + "\n")
 		sb.WriteString("D=M\n")
