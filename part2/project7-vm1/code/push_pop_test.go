@@ -9,9 +9,9 @@ import (
 )
 
 var _ = Describe("PushPop", func() {
-	Describe("LineFromPush", func() {
+	Describe("StackPush", func() {
 		It("should generate correct assembly for push constant", func() {
-			result, err := code.LineFromPush("constant", 10, "test.asm")
+			result, err := code.StackPush("constant", 10, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			expected, err := os.ReadFile("testdata/push_pop/push_constant_10.asm")
@@ -21,7 +21,7 @@ var _ = Describe("PushPop", func() {
 		})
 
 		It("should generate correct assembly for push local", func() {
-			result, err := code.LineFromPush("local", 5, "test.asm")
+			result, err := code.StackPush("local", 5, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			expected, err := os.ReadFile("testdata/push_pop/push_local_5.asm")
@@ -31,7 +31,7 @@ var _ = Describe("PushPop", func() {
 		})
 
 		It("should generate correct assembly for push static", func() {
-			result, err := code.LineFromPush("static", 3, "test.asm")
+			result, err := code.StackPush("static", 3, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			expected, err := os.ReadFile("testdata/push_pop/push_static_3.asm")
@@ -41,9 +41,9 @@ var _ = Describe("PushPop", func() {
 		})
 	})
 
-	Describe("LineFromPop", func() {
+	Describe("StackPop", func() {
 		It("should generate correct assembly for pop local", func() {
-			result, err := code.LineFromPop("local", 2, "test.asm")
+			result, err := code.StackPop("local", 2, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			expected, err := os.ReadFile("testdata/push_pop/pop_local_2.asm")
@@ -53,7 +53,7 @@ var _ = Describe("PushPop", func() {
 		})
 
 		It("should generate correct assembly for pop argument", func() {
-			result, err := code.LineFromPop("argument", 1, "test.asm")
+			result, err := code.StackPop("argument", 1, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			expected, err := os.ReadFile("testdata/push_pop/pop_argument_1.asm")
@@ -63,7 +63,7 @@ var _ = Describe("PushPop", func() {
 		})
 
 		It("should generate correct assembly for pop static", func() {
-			result, err := code.LineFromPop("static", 7, "test.asm")
+			result, err := code.StackPop("static", 7, "test.asm")
 			Expect(err).NotTo(HaveOccurred())
 
 			expected, err := os.ReadFile("testdata/push_pop/pop_static_7.asm")

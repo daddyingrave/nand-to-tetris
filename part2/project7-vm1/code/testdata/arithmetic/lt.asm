@@ -17,8 +17,9 @@ D=-1
 @SP
 A=M
 A=A-1
+A=A-1
 M=D
-D=A
+D=A+1
 @SP
 M=D
 

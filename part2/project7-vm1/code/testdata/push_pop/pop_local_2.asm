@@ -1,9 +1,9 @@
 // pop segment: local, index 2
 
-@2
-D=A
 @LCL
-D=D+M
+D=M
+@2
+D=D+A
 @R13
 M=D
 @SP

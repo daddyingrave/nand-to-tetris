@@ -179,8 +179,9 @@ func writeBackBinary(sb *strings.Builder) *strings.Builder {
 	sb.WriteString("@SP\n")
 	sb.WriteString("A=M\n")
 	sb.WriteString("A=A-1\n")
+	sb.WriteString("A=A-1\n")
 	sb.WriteString("M=D\n")
-	sb.WriteString("D=A\n")
+	sb.WriteString("D=A+1\n")
 	sb.WriteString("@SP\n")
 	sb.WriteString("M=D\n")
 

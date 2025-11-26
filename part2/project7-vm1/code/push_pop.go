@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func LineFromPush(segment string, index int, fileName string) (string, error) {
+func StackPush(segment string, index int, fileName string) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("// push segment: %s, index %d\n\n", segment, index))
 
@@ -19,10 +19,10 @@ func LineFromPush(segment string, index int, fileName string) (string, error) {
 	// 1. Read value from a memory segment
 	switch segment {
 	case parser.SegmentArgument, parser.SegmentLocal, parser.SegmentThis, parser.SegmentThat:
-		sb.WriteString(fmt.Sprintf("@%d\n", index))
-		sb.WriteString("D=A\n")
 		sb.WriteString(parser.SegmentsMnemonics[segment] + "\n")
-		sb.WriteString("A=D+M\n")
+		sb.WriteString("D=M\n")
+		sb.WriteString(fmt.Sprintf("@%d\n", index))
+		sb.WriteString("A=D+A\n")
 		sb.WriteString("D=M\n")
 
 	case parser.SegmentStatic:
@@ -39,7 +39,7 @@ func LineFromPush(segment string, index int, fileName string) (string, error) {
 		sb.WriteString(fmt.Sprintf("@%d\n", index))
 		sb.WriteString("D=A\n")
 		sb.WriteString("@5\n")
-		sb.WriteString("A=D+M\n")
+		sb.WriteString("A=D+A\n")
 		sb.WriteString("D=M\n")
 
 	default:
@@ -60,7 +60,7 @@ func LineFromPush(segment string, index int, fileName string) (string, error) {
 	return sb.String(), nil
 }
 
-func LineFromPop(segment string, index int, fileName string) (string, error) {
+func StackPop(segment string, index int, fileName string) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("// pop segment: %s, index %d\n\n", segment, index))
 
@@ -73,10 +73,10 @@ func LineFromPop(segment string, index int, fileName string) (string, error) {
 	// 1. Define address in memory
 	switch segment {
 	case parser.SegmentArgument, parser.SegmentLocal, parser.SegmentThis, parser.SegmentThat:
-		sb.WriteString(fmt.Sprintf("@%d\n", index))
-		sb.WriteString("D=A\n")
 		sb.WriteString(parser.SegmentsMnemonics[segment] + "\n")
-		sb.WriteString("D=D+M\n")
+		sb.WriteString("D=M\n")
+		sb.WriteString(fmt.Sprintf("@%d\n", index))
+		sb.WriteString("D=D+A\n")
 
 	case parser.SegmentStatic:
 		staticLabel := strings.ReplaceAll(fileName, ".asm", fmt.Sprintf(".%d", index))
@@ -88,7 +88,7 @@ func LineFromPop(segment string, index int, fileName string) (string, error) {
 		sb.WriteString(fmt.Sprintf("@%d\n", index))
 		sb.WriteString("D=A\n")
 		sb.WriteString("@5\n")
-		sb.WriteString("D=D+M\n")
+		sb.WriteString("D=D+A\n")
 
 	default:
 		return "", fmt.Errorf("unknown segment type for pop command '%s'", segment)

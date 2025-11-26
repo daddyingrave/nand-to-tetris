@@ -64,9 +64,9 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 
 	switch commandType {
 	case parser.Push:
-		generatedCode, err = LineFromPush(segment, index, r.asmFile.Name())
+		generatedCode, err = StackPush(segment, index, r.asmFile.Name())
 	case parser.Pop:
-		generatedCode, err = LineFromPop(segment, index, r.asmFile.Name())
+		generatedCode, err = StackPop(segment, index, r.asmFile.Name())
 	default:
 		return fmt.Errorf("unsupported command type '%s'", commandType.String())
 	}

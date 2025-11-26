@@ -1,9 +1,9 @@
 // push segment: local, index 5
 
-@5
-D=A
 @LCL
-A=D+M
+D=M
+@5
+A=D+A
 D=M
 @SP
 A=M

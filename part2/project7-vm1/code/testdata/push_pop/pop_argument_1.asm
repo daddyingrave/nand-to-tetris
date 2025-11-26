@@ -1,9 +1,9 @@
 // pop segment: argument, index 1
 
-@1
-D=A
 @ARG
-D=D+M
+D=M
+@1
+D=D+A
 @R13
 M=D
 @SP
