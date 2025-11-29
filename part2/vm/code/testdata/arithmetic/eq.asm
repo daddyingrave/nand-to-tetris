@@ -1,0 +1,28 @@
+// eq
+
+  @SP
+  A=M
+  A=A-1
+  D=M
+  A=A-1
+  D=D-M
+  @EQ_666
+  D;JEQ
+  @NOT_EQ_666
+  D;JNE
+(EQ_666)
+  D=-1
+  @EQ_END_666
+  D;JMP
+(NOT_EQ_666)
+  D=0
+(EQ_END_666)
+  @SP
+  A=M
+  A=A-1
+  A=A-1
+  M=D
+  D=A+1
+  @SP
+  M=D
+
