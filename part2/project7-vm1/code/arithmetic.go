@@ -1,18 +1,9 @@
 package code
 
-import "strings"
-
-var Mappings = map[string]func() string{
-	"add": Add,
-	"sub": Sub,
-	"neg": Neg,
-	"eq":  Eq,
-	"gt":  Gt,
-	"lt":  Lt,
-	"and": And,
-	"or":  Or,
-	"not": Not,
-}
+import (
+	"fmt"
+	"strings"
+)
 
 func Add() string {
 	sb := &strings.Builder{}
@@ -53,22 +44,23 @@ func Neg() string {
 	return sb.String()
 }
 
-func Eq() string {
+func Eq(counter int) string {
 	sb := &strings.Builder{}
 	sb.WriteString("// eq\n\n")
 	popBinary(sb)
 
-	sb.WriteString("D=D&M\n")
-	sb.WriteString("D=!D\n")
-	sb.WriteString("D=D&M\n")
-	sb.WriteString("@EQ\n")
+	sb.WriteString("D=D-M\n")
+	sb.WriteString(fmt.Sprintf("@EQ_%d\n", counter))
 	sb.WriteString("D;JEQ\n")
-	sb.WriteString("@NOT_EQ\n")
+	sb.WriteString(fmt.Sprintf("@NOT_EQ_%d\n", counter))
 	sb.WriteString("D;JNE\n")
-	sb.WriteString("(EQ)\n")
-	sb.WriteString("D=1\n")
-	sb.WriteString("(NOT_EQ)\n")
+	sb.WriteString(fmt.Sprintf("(EQ_%d)\n", counter))
 	sb.WriteString("D=-1\n")
+	sb.WriteString(fmt.Sprintf("@EQ_END_%d\n", counter))
+	sb.WriteString("D;JMP\n")
+	sb.WriteString(fmt.Sprintf("(NOT_EQ_%d)\n", counter))
+	sb.WriteString("D=0\n")
+	sb.WriteString(fmt.Sprintf("(EQ_END_%d)\n", counter))
 
 	writeBackBinary(sb)
 	sb.WriteString("\n")
@@ -76,19 +68,23 @@ func Eq() string {
 	return sb.String()
 }
 
-func Gt() string {
+func Gt(counter int) string {
 	sb := &strings.Builder{}
 	sb.WriteString("// gt\n\n")
 	popBinary(sb)
 
 	sb.WriteString("D=M-D\n")
-	sb.WriteString("@GT\n")
+	sb.WriteString(fmt.Sprintf("@GT_%d\n", counter))
 	sb.WriteString("D;JGT\n")
-	sb.WriteString("@NOT_GT\n")
+	sb.WriteString(fmt.Sprintf("@NOT_GT_%d\n", counter))
 	sb.WriteString("D;JMP\n")
-	sb.WriteString("(GT)\n")
-	sb.WriteString("D=1\n")
+	sb.WriteString(fmt.Sprintf("(GT_%d)\n", counter))
 	sb.WriteString("D=-1\n")
+	sb.WriteString(fmt.Sprintf("@GT_END_%d\n", counter))
+	sb.WriteString("D;JMP\n")
+	sb.WriteString(fmt.Sprintf("(NOT_GT_%d)\n", counter))
+	sb.WriteString("D=0\n")
+	sb.WriteString(fmt.Sprintf("(GT_END_%d)\n", counter))
 
 	writeBackBinary(sb)
 	sb.WriteString("\n")
@@ -96,20 +92,23 @@ func Gt() string {
 	return sb.String()
 }
 
-func Lt() string {
+func Lt(counter int) string {
 	sb := &strings.Builder{}
 	sb.WriteString("// lt\n\n")
 	popBinary(sb)
 
 	sb.WriteString("D=M-D\n")
-	sb.WriteString("@LT\n")
+	sb.WriteString(fmt.Sprintf("@LT_%d\n", counter))
 	sb.WriteString("D;JLT\n")
-	sb.WriteString("@NOT_LT\n")
+	sb.WriteString(fmt.Sprintf("@NOT_LT_%d\n", counter))
 	sb.WriteString("D;JMP\n")
-	sb.WriteString("(LT)\n")
-	sb.WriteString("D=1\n")
-	sb.WriteString("(NOT_LT)\n")
+	sb.WriteString(fmt.Sprintf("(LT_%d)\n", counter))
 	sb.WriteString("D=-1\n")
+	sb.WriteString(fmt.Sprintf("@LT_END_%d\n", counter))
+	sb.WriteString("D;JMP\n")
+	sb.WriteString(fmt.Sprintf("(NOT_LT_%d)\n", counter))
+	sb.WriteString("D=0\n")
+	sb.WriteString(fmt.Sprintf("(LT_END_%d)\n", counter))
 
 	writeBackBinary(sb)
 	sb.WriteString("\n")
@@ -149,6 +148,7 @@ func Not() string {
 	popUnary(sb)
 
 	sb.WriteString("D=-D\n")
+	sb.WriteString("D=D-1\n")
 
 	writeBackUnary(sb)
 	sb.WriteString("\n")

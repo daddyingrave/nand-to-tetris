@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"project7-vm1/parser"
 	"strings"
 )
@@ -39,13 +40,45 @@ func NewWriter(path string) (Writer, error) {
 	return writer{asmFile: asmFile}, nil
 }
 
+var Labelled = map[string]int{
+	"eq": 0,
+	"gt": 0,
+	"lt": 0,
+}
+
 func (r writer) WriteArithmetic(command string) error {
-	writeF := Mappings[command]
-	if writeF == nil {
+	count, exist := Labelled[command]
+	if exist {
+		count++
+		Labelled[command] = count
+	}
+
+	var code string
+
+	switch command {
+	case "add":
+		code = Add()
+	case "sub":
+		code = Sub()
+	case "neg":
+		code = Neg()
+	case "eq":
+		code = Eq(count)
+	case "gt":
+		code = Gt(count)
+	case "lt":
+		code = Lt(count)
+	case "and":
+		code = And()
+	case "or":
+		code = Or()
+	case "not":
+		code = Not()
+	default:
 		return fmt.Errorf("unknown command '%s'", command)
 	}
 
-	if _, err := r.asmFile.WriteString(writeF()); err != nil {
+	if _, err := r.asmFile.WriteString(code); err != nil {
 		return fmt.Errorf("fail to write command '%s' to file %w", command, err)
 	}
 
@@ -58,15 +91,17 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 	var err error
 	var generatedCode string
 
+	asmFileName := r.asmFile.Name()
+	_, asmFileName = filepath.Split(asmFileName)
 	if segment == parser.SegmentStatic {
-		staticMappings[r.asmFile.Name()]++
+		staticMappings[asmFileName]++
 	}
 
 	switch commandType {
 	case parser.Push:
-		generatedCode, err = StackPush(segment, index, r.asmFile.Name())
+		generatedCode, err = StackPush(segment, index, asmFileName)
 	case parser.Pop:
-		generatedCode, err = StackPop(segment, index, r.asmFile.Name())
+		generatedCode, err = StackPop(segment, index, asmFileName)
 	default:
 		return fmt.Errorf("unsupported command type '%s'", commandType.String())
 	}
@@ -74,14 +109,14 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 	if err != nil {
 		return fmt.Errorf(
 			"fail to write command '%s', segment '%s', index '%d', to file '%s'",
-			commandType.String(), segment, index, r.asmFile.Name(),
+			commandType.String(), segment, index, asmFileName,
 		)
 	}
 
 	if _, err := r.asmFile.WriteString(generatedCode); err != nil {
 		return fmt.Errorf(
 			"fail to write command '%s' segment '%s', index '%d', to file '%s' %w",
-			commandType.String(), segment, index, r.asmFile.Name(), err,
+			commandType.String(), segment, index, asmFileName, err,
 		)
 	}
 

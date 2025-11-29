@@ -1,6 +1,6 @@
-// push segment: constant, index 3030
+// push segment: constant, index 111
 
-@3030
+@111
 D=A
 @SP
 A=M
@@ -9,24 +9,9 @@ D=A+1
 @SP
 M=D
 
-// pop segment: pointer, index 0
+// push segment: constant, index 333
 
-@THIS
-D=A
-@R13
-M=D
-@SP
-A=M-1
-D=M
-@R13
-A=M
-M=D
-@SP
-M=M-1
-
-// push segment: constant, index 3040
-
-@3040
+@333
 D=A
 @SP
 A=M
@@ -35,9 +20,20 @@ D=A+1
 @SP
 M=D
 
-// pop segment: pointer, index 1
+// push segment: constant, index 888
 
-@THAT
+@888
+D=A
+@SP
+A=M
+M=D
+D=A+1
+@SP
+M=D
+
+// pop segment: static, index 8
+
+@BasicTest.8
 D=A
 @R13
 M=D
@@ -50,23 +46,10 @@ M=D
 @SP
 M=M-1
 
-// push segment: constant, index 32
+// pop segment: static, index 3
 
-@32
+@BasicTest.3
 D=A
-@SP
-A=M
-M=D
-D=A+1
-@SP
-M=D
-
-// pop segment: this, index 2
-
-@THIS
-D=M
-@2
-D=D+A
 @R13
 M=D
 @SP
@@ -78,23 +61,10 @@ M=D
 @SP
 M=M-1
 
-// push segment: constant, index 46
+// pop segment: static, index 1
 
-@46
+@BasicTest.1
 D=A
-@SP
-A=M
-M=D
-D=A+1
-@SP
-M=D
-
-// pop segment: that, index 6
-
-@THAT
-D=M
-@6
-D=D+A
 @R13
 M=D
 @SP
@@ -106,9 +76,9 @@ M=D
 @SP
 M=M-1
 
-// push segment: pointer, index 0
+// push segment: static, index 3
 
-@THIS
+@BasicTest.3
 D=M
 @SP
 A=M
@@ -117,40 +87,9 @@ D=A+1
 @SP
 M=D
 
-// push segment: pointer, index 1
+// push segment: static, index 1
 
-@THAT
-D=M
-@SP
-A=M
-M=D
-D=A+1
-@SP
-M=D
-
-// add
-
-@SP
-A=M
-A=A-1
-D=M
-A=A-1
-D=D+M
-@SP
-A=M
-A=A-1
-A=A-1
-M=D
-D=A+1
-@SP
-M=D
-
-// push segment: this, index 2
-
-@THIS
-D=M
-@2
-A=D+A
+@BasicTest.1
 D=M
 @SP
 A=M
@@ -176,12 +115,9 @@ D=A+1
 @SP
 M=D
 
-// push segment: that, index 6
+// push segment: static, index 8
 
-@THAT
-D=M
-@6
-A=D+A
+@BasicTest.8
 D=M
 @SP
 A=M

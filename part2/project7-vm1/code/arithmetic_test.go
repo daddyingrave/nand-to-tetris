@@ -44,7 +44,7 @@ var _ = Describe("Arithmetic", func() {
 
 	Describe("Eq", func() {
 		It("should generate correct assembly for eq", func() {
-			result := code.Eq()
+			result := code.Eq(666)
 
 			expected, err := os.ReadFile("testdata/arithmetic/eq.asm")
 			Expect(err).NotTo(HaveOccurred())
@@ -55,7 +55,7 @@ var _ = Describe("Arithmetic", func() {
 
 	Describe("Gt", func() {
 		It("should generate correct assembly for gt", func() {
-			result := code.Gt()
+			result := code.Gt(666)
 
 			expected, err := os.ReadFile("testdata/arithmetic/gt.asm")
 			Expect(err).NotTo(HaveOccurred())
@@ -66,7 +66,7 @@ var _ = Describe("Arithmetic", func() {
 
 	Describe("Lt", func() {
 		It("should generate correct assembly for lt", func() {
-			result := code.Lt()
+			result := code.Lt(666)
 
 			expected, err := os.ReadFile("testdata/arithmetic/lt.asm")
 			Expect(err).NotTo(HaveOccurred())
