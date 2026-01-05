@@ -27,7 +27,7 @@ const (
 	Pop
 	Label
 	Goto
-	If
+	IfGoto
 	Function
 	Return
 	Call
@@ -45,8 +45,8 @@ func (r *CommandType) String() string {
 		return "label"
 	case Goto:
 		return "goto"
-	case If:
-		return "if"
+	case IfGoto:
+		return "if-goto"
 	case Function:
 		return "function"
 	case Return:

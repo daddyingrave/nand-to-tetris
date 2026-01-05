@@ -3,21 +3,53 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"vm/code"
 	"vm/parser"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("path must be provided")
-	}
-	path := os.Args[1]
-	if path == "" {
-		log.Fatal("path must be provided")
+	path := "."
+	if len(os.Args) > 1 {
+		path = os.Args[1]
 	}
 
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var vmFiles []string
+
+	targetFileName := ""
+	if fileInfo.IsDir() {
+		targetFileName = filepath.Join(path, fileInfo.Name()+".asm")
+		files, err := os.ReadDir(fileInfo.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, file := range files {
+			if !file.IsDir() && strings.HasSuffix(file.Name(), ".vm") {
+				vmFiles = append(vmFiles, filepath.Join(path, file.Name()))
+			}
+		}
+	} else if strings.HasSuffix(fileInfo.Name(), ".vm") {
+		targetFileName = strings.ReplaceAll(path, ".vm", ".asm")
+		vmFiles = append(vmFiles, path)
+	} else {
+		log.Fatalf("Unsupported file type: '%s'", fileInfo.Name())
+	}
+
+	asmFile, err := os.OpenFile(targetFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Fatal(err)
+	}
+	asmFile.Close()
+
 	p := parser.NewParser(path)
-	writer, err := code.NewWriter(path)
+	writer, err := code.NewWriter(targetFileName, path)
 	if err != nil {
 		log.Fatal(err)
 	}

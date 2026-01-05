@@ -12,11 +12,15 @@ import (
 type Writer interface {
 	WriteArithmetic(command string) error
 	WritePushPop(commandType parser.CommandType, segment string, index int) error
+	WriteLabel(command string) error
+	WriteGoTo(command string) error
+	WriteIfGoTo(command string) error
 	io.Closer
 }
 
 type writer struct {
-	asmFile *os.File
+	asmFile    *os.File
+	vmFileName string
 }
 
 // 0 - stack pointer (SP)
@@ -30,14 +34,16 @@ type writer struct {
 // 16 - 255 - static variables
 // 256 - 2047 - stack
 
-func NewWriter(path string) (Writer, error) {
-	targetPath := strings.Replace(path, ".vm", ".asm", 1)
-	asmFile, err := os.OpenFile(targetPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+func NewWriter(asmFilePath string, vmFileName string) (Writer, error) {
+	asmFile, err := os.OpenFile(asmFilePath, os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
-		return nil, fmt.Errorf("fail to open target file '%s' %w", targetPath, err)
+		return nil, fmt.Errorf("fail to open target file '%s' %w", asmFilePath, err)
 	}
 
-	return writer{asmFile: asmFile}, nil
+	return writer{
+		asmFile:    asmFile,
+		vmFileName: strings.TrimSuffix(vmFileName, ".vm"),
+	}, nil
 }
 
 var Labelled = map[string]int{
@@ -91,17 +97,16 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 	var err error
 	var generatedCode string
 
-	asmFileName := r.asmFile.Name()
-	_, asmFileName = filepath.Split(asmFileName)
+	_, vmFileNameOnly := filepath.Split(r.vmFileName)
 	if segment == parser.SegmentStatic {
-		staticMappings[asmFileName]++
+		staticMappings[vmFileNameOnly]++
 	}
 
 	switch commandType {
 	case parser.Push:
-		generatedCode, err = StackPush(segment, index, asmFileName)
+		generatedCode, err = StackPush(segment, index, vmFileNameOnly)
 	case parser.Pop:
-		generatedCode, err = StackPop(segment, index, asmFileName)
+		generatedCode, err = StackPop(segment, index, vmFileNameOnly)
 	default:
 		return fmt.Errorf("unsupported command type '%s'", commandType.String())
 	}
@@ -109,18 +114,33 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 	if err != nil {
 		return fmt.Errorf(
 			"fail to write command '%s', segment '%s', index '%d', to file '%s'",
-			commandType.String(), segment, index, asmFileName,
+			commandType.String(), segment, index, r.asmFile.Name(),
 		)
 	}
 
 	if _, err := r.asmFile.WriteString(generatedCode); err != nil {
 		return fmt.Errorf(
 			"fail to write command '%s' segment '%s', index '%d', to file '%s' %w",
-			commandType.String(), segment, index, asmFileName, err,
+			commandType.String(), segment, index, r.asmFile.Name(), err,
 		)
 	}
 
 	return nil
+}
+
+func (r writer) WriteLabel(command string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r writer) WriteGoTo(command string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r writer) WriteIfGoTo(command string) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (r writer) Close() error {
