@@ -12,9 +12,12 @@ import (
 type Writer interface {
 	WriteArithmetic(command string) error
 	WritePushPop(commandType parser.CommandType, segment string, index int) error
-	WriteLabel(command string) error
-	WriteGoTo(command string) error
-	WriteIfGoTo(command string) error
+	WriteLabel(label string) error
+	WriteGoTo(label string) error
+	WriteIfGoTo(label string) error
+	WriteFunction(functionName string, nVars int) error
+	WriteCall(functionName string, nArgs int) error
+	WriteReturn() error
 	io.Closer
 }
 
@@ -128,21 +131,36 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 	return nil
 }
 
-func (r writer) WriteLabel(command string) error {
+func (r writer) WriteLabel(label string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (r writer) WriteGoTo(command string) error {
+func (r writer) WriteGoTo(label string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (r writer) WriteIfGoTo(command string) error {
+func (r writer) WriteIfGoTo(label string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
 func (r writer) Close() error {
 	return r.asmFile.Close()
+}
+
+func (r writer) WriteFunction(functionName string, nVars int) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r writer) WriteCall(functionName string, nArgs int) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r writer) WriteReturn() error {
+	//TODO implement me
+	panic("implement me")
 }
