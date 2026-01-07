@@ -117,6 +117,7 @@ func (r *parser) Commands(yield func(*Command, error) bool) {
 	if err != nil {
 		log.Fatalf("failed to open file '%s' with program code %s", r.path, err)
 	}
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)

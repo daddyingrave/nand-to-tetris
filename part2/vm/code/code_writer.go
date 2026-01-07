@@ -2,7 +2,6 @@ package code
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +17,6 @@ type Writer interface {
 	WriteFunction(functionName string, nVars int) error
 	WriteCall(functionName string, nArgs int) error
 	WriteReturn() error
-	io.Closer
 }
 
 type writer struct {
@@ -37,12 +35,7 @@ type writer struct {
 // 16 - 255 - static variables
 // 256 - 2047 - stack
 
-func NewWriter(asmFilePath string, vmFileName string) (Writer, error) {
-	asmFile, err := os.OpenFile(asmFilePath, os.O_WRONLY|os.O_APPEND, 0600)
-	if err != nil {
-		return nil, fmt.Errorf("fail to open target file '%s' %w", asmFilePath, err)
-	}
-
+func NewWriter(asmFile *os.File, vmFileName string) (Writer, error) {
 	return writer{
 		asmFile:    asmFile,
 		vmFileName: strings.TrimSuffix(vmFileName, ".vm"),
@@ -144,10 +137,6 @@ func (r writer) WriteGoTo(label string) error {
 func (r writer) WriteIfGoTo(label string) error {
 	//TODO implement me
 	panic("implement me")
-}
-
-func (r writer) Close() error {
-	return r.asmFile.Close()
 }
 
 func (r writer) WriteFunction(functionName string, nVars int) error {

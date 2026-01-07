@@ -46,30 +46,31 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	asmFile.Close()
+	defer asmFile.Close()
 
-	p := parser.NewParser(path)
-	writer, err := code.NewWriter(targetFileName, path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer writer.Close()
-
-	for cmd, err := range p.Commands {
+	for _, vmFile := range vmFiles {
+		p := parser.NewParser(vmFile)
+		writer, err := code.NewWriter(asmFile, vmFile)
 		if err != nil {
 			log.Fatal(err)
 		}
-		switch cmd.Type {
-		case parser.Push, parser.Pop:
-			if err := writer.WritePushPop(cmd.Type, cmd.Arg1, cmd.Arg2); err != nil {
+
+		for cmd, err := range p.Commands {
+			if err != nil {
 				log.Fatal(err)
 			}
-		case parser.Arithmetic:
-			if err := writer.WriteArithmetic(cmd.Arg1); err != nil {
-				log.Fatal(err)
+			switch cmd.Type {
+			case parser.Push, parser.Pop:
+				if err := writer.WritePushPop(cmd.Type, cmd.Arg1, cmd.Arg2); err != nil {
+					log.Fatal(err)
+				}
+			case parser.Arithmetic:
+				if err := writer.WriteArithmetic(cmd.Arg1); err != nil {
+					log.Fatal(err)
+				}
+			default:
+				log.Fatalf("unsupported command: %+v", *cmd)
 			}
-		default:
-			log.Fatalf("unsupported command: %+v", *cmd)
 		}
 	}
 }
