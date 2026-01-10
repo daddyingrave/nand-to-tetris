@@ -31,10 +31,10 @@ func IfGoTo(fileName string, functionName string, label string) string {
 
 	sb.WriteString(fmt.Sprintf("// if-goto: %s, func: %s, file: %s\n\n", label, functionName, fileName))
 	sb.WriteString("  @SP\n")
-	sb.WriteString("  A=M-1\n")
+	sb.WriteString("  AM=M-1\n")
 	sb.WriteString("  D=M\n")
 	sb.WriteString(fmt.Sprintf("  @%s\n", labelName(fileName, functionName, label)))
-	sb.WriteString("  D;JLT\n")
+	sb.WriteString("  D;JNE\n")
 	sb.WriteString("\n")
 
 	return sb.String()
