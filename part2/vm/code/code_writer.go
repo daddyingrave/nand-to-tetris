@@ -20,8 +20,9 @@ type Writer interface {
 }
 
 type writer struct {
-	asmFile    *os.File
-	vmFileName string
+	asmFile         *os.File
+	vmFileName      string
+	currentFunction string
 }
 
 // 0 - stack pointer (SP)
@@ -37,8 +38,9 @@ type writer struct {
 
 func NewWriter(asmFile *os.File, vmFileName string) (Writer, error) {
 	return writer{
-		asmFile:    asmFile,
-		vmFileName: strings.TrimSuffix(vmFileName, ".vm"),
+		asmFile:         asmFile,
+		vmFileName:      strings.TrimSuffix(vmFileName, ".vm"),
+		currentFunction: "global",
 	}, nil
 }
 
@@ -125,18 +127,36 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 }
 
 func (r writer) WriteLabel(label string) error {
-	//TODO implement me
-	panic("implement me")
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	if _, err := r.asmFile.WriteString(Label(fileName, r.currentFunction, label)); err != nil {
+		return fmt.Errorf("fail to write command label '%s', to file '%s' %w", label, r.asmFile.Name(), err)
+	}
+
+	return nil
 }
 
 func (r writer) WriteGoTo(label string) error {
-	//TODO implement me
-	panic("implement me")
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	if _, err := r.asmFile.WriteString(GoTo(fileName, r.currentFunction, label)); err != nil {
+		return fmt.Errorf("fail to write command goto '%s', to file '%s' %w", label, r.asmFile.Name(), err)
+	}
+
+	return nil
 }
 
 func (r writer) WriteIfGoTo(label string) error {
-	//TODO implement me
-	panic("implement me")
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	if _, err := r.asmFile.WriteString(IfGoTo(fileName, r.currentFunction, label)); err != nil {
+		return fmt.Errorf("fail to write command if-goto '%s', to file '%s' %w", label, r.asmFile.Name(), err)
+	}
+
+	return nil
 }
 
 func (r writer) WriteFunction(functionName string, nVars int) error {
