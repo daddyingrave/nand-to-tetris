@@ -80,6 +80,14 @@ func main() {
 				if err := writer.WriteIfGoTo(cmd.Arg1); err != nil {
 					log.Fatal(err)
 				}
+			case parser.Function:
+				if err := writer.WriteFunction(cmd.Arg1, cmd.Arg2); err != nil {
+					log.Fatal(err)
+				}
+			case parser.Return:
+				if err := writer.WriteReturn(); err != nil {
+					log.Fatal(err)
+				}
 			default:
 				log.Fatalf("unsupported command: %+v", *cmd)
 			}

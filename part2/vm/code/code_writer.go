@@ -14,8 +14,8 @@ type Writer interface {
 	WriteLabel(label string) error
 	WriteGoTo(label string) error
 	WriteIfGoTo(label string) error
-	WriteFunction(functionName string, nVars int) error
 	WriteCall(functionName string, nArgs int) error
+	WriteFunction(functionName string, nVars int) error
 	WriteReturn() error
 }
 
@@ -36,11 +36,14 @@ type writer struct {
 // 16 - 255 - static variables
 // 256 - 2047 - stack
 
+var defaultFunctionName = "global"
+
 func NewWriter(asmFile *os.File, vmFileName string) (Writer, error) {
-	return writer{
+
+	return &writer{
 		asmFile:         asmFile,
 		vmFileName:      strings.TrimSuffix(vmFileName, ".vm"),
-		currentFunction: "global",
+		currentFunction: defaultFunctionName,
 	}, nil
 }
 
@@ -50,7 +53,7 @@ var Labelled = map[string]int{
 	"lt": 0,
 }
 
-func (r writer) WriteArithmetic(command string) error {
+func (r *writer) WriteArithmetic(command string) error {
 	count, exist := Labelled[command]
 	if exist {
 		count++
@@ -91,7 +94,7 @@ func (r writer) WriteArithmetic(command string) error {
 
 var staticMappings = map[string]int{}
 
-func (r writer) WritePushPop(commandType parser.CommandType, segment string, index int) error {
+func (r *writer) WritePushPop(commandType parser.CommandType, segment string, index int) error {
 	var err error
 	var generatedCode string
 
@@ -126,7 +129,7 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 	return nil
 }
 
-func (r writer) WriteLabel(label string) error {
+func (r *writer) WriteLabel(label string) error {
 	_, fn := filepath.Split(r.vmFileName)
 	fileName := strings.ReplaceAll(fn, ".asm", "")
 
@@ -137,7 +140,7 @@ func (r writer) WriteLabel(label string) error {
 	return nil
 }
 
-func (r writer) WriteGoTo(label string) error {
+func (r *writer) WriteGoTo(label string) error {
 	_, fn := filepath.Split(r.vmFileName)
 	fileName := strings.ReplaceAll(fn, ".asm", "")
 
@@ -148,7 +151,7 @@ func (r writer) WriteGoTo(label string) error {
 	return nil
 }
 
-func (r writer) WriteIfGoTo(label string) error {
+func (r *writer) WriteIfGoTo(label string) error {
 	_, fn := filepath.Split(r.vmFileName)
 	fileName := strings.ReplaceAll(fn, ".asm", "")
 
@@ -159,17 +162,43 @@ func (r writer) WriteIfGoTo(label string) error {
 	return nil
 }
 
-func (r writer) WriteFunction(functionName string, nVars int) error {
+func (r *writer) WriteCall(functionName string, nArgs int) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (r writer) WriteCall(functionName string, nArgs int) error {
-	//TODO implement me
-	panic("implement me")
+func (r *writer) WriteFunction(fnName string, nVars int) error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	r.currentFunction = fnName
+
+	functionCode, err := Function(fileName, fnName, nVars)
+	if err != nil {
+		return fmt.Errorf("fail to generate function code '%s/%d' %w", fnName, nVars, err)
+	}
+	if _, err := r.asmFile.WriteString(functionCode); err != nil {
+		return fmt.Errorf("fail to write command function '%s/%d', to file '%s' %w", fnName, nVars, r.asmFile.Name(), err)
+	}
+
+	return nil
 }
 
-func (r writer) WriteReturn() error {
-	//TODO implement me
-	panic("implement me")
+func (r *writer) WriteReturn() error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	defer func() {
+		r.currentFunction = defaultFunctionName
+	}()
+
+	returnCode, err := Return(fileName, r.currentFunction)
+	if err != nil {
+		return fmt.Errorf("fail to generate return code for function '%s' %w", r.currentFunction, err)
+	}
+	if _, err := r.asmFile.WriteString(returnCode); err != nil {
+		return fmt.Errorf("fail to write command return for function '%s', to file '%s' %w", r.currentFunction, r.asmFile.Name(), err)
+	}
+
+	return nil
 }
