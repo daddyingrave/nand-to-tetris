@@ -56,6 +56,7 @@ func Return(fileName string, function string) (string, error) {
 	utils.WriteSBf(sb, "// retAddr")
 	utils.WriteSBf(sb, "  @5")
 	utils.WriteSBf(sb, "  D=D-A") // D preserved from endFrame
+	utils.WriteSBf(sb, "  A=D")   // Dereference return address
 	utils.WriteSBf(sb, "  D=M")
 	utils.WriteSBf(sb, "  @retAddr")
 	utils.WriteSBf(sb, "  M=D")
@@ -67,6 +68,7 @@ func Return(fileName string, function string) (string, error) {
 	utils.WriteSBf(sb, "  AM=M-1")
 	utils.WriteSBf(sb, "  D=M")
 	utils.WriteSBf(sb, "  @ARG")
+	utils.WriteSBf(sb, "  A=M")
 	utils.WriteSBf(sb, "  M=D")
 	utils.WriteSBf(sb, "")
 
@@ -85,6 +87,8 @@ func Return(fileName string, function string) (string, error) {
 		utils.WriteSBf(sb, "  D=A")
 		utils.WriteSBf(sb, "  @endFrame")
 		utils.WriteSBf(sb, "  D=M-D")
+		utils.WriteSBf(sb, "  A=D")
+		utils.WriteSBf(sb, "  D=M")
 		utils.WriteSBf(sb, "  @%s", segment)
 		utils.WriteSBf(sb, "  M=D")
 		utils.WriteSBf(sb, "")
