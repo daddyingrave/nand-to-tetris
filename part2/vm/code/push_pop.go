@@ -30,8 +30,7 @@ func StackPush(segment string, index int, fileName string) (string, error) {
 		sb.WriteString("  D=M\n")
 
 	case parser.SegmentStatic:
-		staticLabel := strings.ReplaceAll(fileName, ".asm", fmt.Sprintf(".%d", index))
-		staticLabel = fmt.Sprintf("  @%s", staticLabel)
+		staticLabel := fmt.Sprintf("  @%s.%d", fileName, index)
 		sb.WriteString(staticLabel + "\n")
 		sb.WriteString("  D=M\n")
 
@@ -87,8 +86,7 @@ func StackPop(segment string, index int, fileName string) (string, error) {
 		sb.WriteString("  D=D+A\n")
 
 	case parser.SegmentStatic:
-		staticLabel := strings.ReplaceAll(fileName, ".asm", fmt.Sprintf(".%d", index))
-		staticLabel = fmt.Sprintf("  @%s", staticLabel)
+		staticLabel := fmt.Sprintf("  @%s.%d", fileName, index)
 		sb.WriteString(staticLabel + "\n")
 		sb.WriteString("  D=A\n")
 

@@ -162,9 +162,25 @@ func (r *writer) WriteIfGoTo(label string) error {
 	return nil
 }
 
+var functionCallsCount = map[string]int{}
+
 func (r *writer) WriteCall(functionName string, nArgs int) error {
-	//TODO implement me
-	panic("implement me")
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	count := functionCallsCount[fmt.Sprintf("%s/%s", fileName, r.currentFunction)]
+	count++
+	functionCallsCount[fmt.Sprintf("%s/%s", fileName, r.currentFunction)] = count
+
+	callCode, err := Call(fileName, r.currentFunction, functionName, nArgs, count)
+	if err != nil {
+		return fmt.Errorf("fail to generate call code  '%s/%s/%d' %w", r.currentFunction, functionName, nArgs, err)
+	}
+	if _, err := r.asmFile.WriteString(callCode); err != nil {
+		return fmt.Errorf("fail to write command call '%s/%d', to file '%s' %w", functionName, nArgs, r.asmFile.Name(), err)
+	}
+
+	return nil
 }
 
 func (r *writer) WriteFunction(fnName string, nVars int) error {
@@ -187,10 +203,6 @@ func (r *writer) WriteFunction(fnName string, nVars int) error {
 func (r *writer) WriteReturn() error {
 	_, fn := filepath.Split(r.vmFileName)
 	fileName := strings.ReplaceAll(fn, ".asm", "")
-
-	defer func() {
-		r.currentFunction = defaultFunctionName
-	}()
 
 	returnCode, err := Return(fileName, r.currentFunction)
 	if err != nil {

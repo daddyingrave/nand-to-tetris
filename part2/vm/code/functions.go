@@ -2,12 +2,70 @@ package code
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"vm/internal/utils"
 	"vm/parser"
 )
 
-// Call
+func Call(fileName string, currentFunction string, functionToCall string, nArgs int, i int) (string, error) {
+	sb := &strings.Builder{}
+
+	utils.WriteSBf(sb, "// call: %s from %s, nArgs %d, file: %s\n", functionToCall, currentFunction, nArgs, fileName)
+
+	returnLabelName := fmt.Sprintf("%s.%s.$ret.%d", fileName, currentFunction, i)
+
+	utils.WriteSBf(sb, "// return address label")
+	utils.WriteSBf(sb, "  @%s", returnLabelName)
+	utils.WriteSBf(sb, "  D=A")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  A=M")
+	utils.WriteSBf(sb, "  M=D")
+	utils.WriteSBf(sb, "  D=A+1")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  M=D")
+	utils.WriteSBf(sb, "")
+
+	utils.WriteSBf(sb, "// save callers segments")
+	for _, segment := range slices.Backward(callerSegments) {
+		utils.WriteSBf(sb, "// push %s", segment)
+		utils.WriteSBf(sb, "  @%s", segment)
+		utils.WriteSBf(sb, "  D=M")
+		utils.WriteSBf(sb, "  @SP")
+		utils.WriteSBf(sb, "  A=M")
+		utils.WriteSBf(sb, "  M=D")
+		utils.WriteSBf(sb, "  D=A+1")
+		utils.WriteSBf(sb, "  @SP")
+		utils.WriteSBf(sb, "  M=D")
+		utils.WriteSBf(sb, "")
+	}
+
+	utils.WriteSBf(sb, "// Reposition ARG")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  D=M")
+	utils.WriteSBf(sb, "  @5")
+	utils.WriteSBf(sb, "  D=D-A")
+	utils.WriteSBf(sb, "  @%d", nArgs)
+	utils.WriteSBf(sb, "  D=D-A")
+	utils.WriteSBf(sb, "  @ARG")
+	utils.WriteSBf(sb, "  M=D")
+	utils.WriteSBf(sb, "")
+
+	utils.WriteSBf(sb, "// Reposition LCL")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  D=M")
+	utils.WriteSBf(sb, "  @LCL")
+	utils.WriteSBf(sb, "  M=D")
+	utils.WriteSBf(sb, "")
+
+	utils.WriteSBf(sb, "// goto function")
+	utils.WriteSBf(sb, "  @%s", functionToCall)
+	utils.WriteSBf(sb, "  0;JMP")
+	utils.WriteSBf(sb, "(%s)", returnLabelName)
+	utils.WriteSBf(sb, "")
+
+	return sb.String(), nil
+}
 
 func Function(fileName string, fnName string, nVars int) (string, error) {
 	sb := &strings.Builder{}
@@ -21,22 +79,16 @@ func Function(fileName string, fnName string, nVars int) (string, error) {
 			return "", fmt.Errorf("fail to build push constant for function '%s/%d', in file '%s' %w", fnName, nVars, fileName, err)
 		}
 		utils.WriteSBf(sb, push)
-
-		//pop, err := StackPop(parser.SegmentLocal, i, fileName)
-		//if err != nil {
-		//	return "", fmt.Errorf("fail to build pop local for function '%s/%d', in file '%s' %w", fnName, nVars, fileName, err)
-		//}
-		//utils.WriteSBf(sb, pop)
 	}
 
 	return sb.String(), nil
 }
 
-var callerSegments = map[string]int{
-	"THAT": 1,
-	"THIS": 2,
-	"ARG":  3,
-	"LCL":  4,
+var callerSegments = []string{
+	"THAT",
+	"THIS",
+	"ARG",
+	"LCL",
 }
 
 func Return(fileName string, function string) (string, error) {
@@ -44,7 +96,6 @@ func Return(fileName string, function string) (string, error) {
 
 	utils.WriteSBf(sb, "// return for function: %s, file: %s\n", function, fileName)
 
-	// endFrame
 	utils.WriteSBf(sb, "// endFrame")
 	utils.WriteSBf(sb, "  @LCL")
 	utils.WriteSBf(sb, "  D=M")
@@ -52,7 +103,6 @@ func Return(fileName string, function string) (string, error) {
 	utils.WriteSBf(sb, "  M=D")
 	utils.WriteSBf(sb, "")
 
-	// retAddr
 	utils.WriteSBf(sb, "// retAddr")
 	utils.WriteSBf(sb, "  @5")
 	utils.WriteSBf(sb, "  D=D-A") // D preserved from endFrame
@@ -62,7 +112,6 @@ func Return(fileName string, function string) (string, error) {
 	utils.WriteSBf(sb, "  M=D")
 	utils.WriteSBf(sb, "")
 
-	// reposition return val
 	utils.WriteSBf(sb, "// reposition return val")
 	utils.WriteSBf(sb, "  @SP")
 	utils.WriteSBf(sb, "  AM=M-1")
@@ -72,7 +121,6 @@ func Return(fileName string, function string) (string, error) {
 	utils.WriteSBf(sb, "  M=D")
 	utils.WriteSBf(sb, "")
 
-	// reposition SP for caller
 	utils.WriteSBf(sb, "// reposition SP for caller")
 	utils.WriteSBf(sb, "  @ARG")
 	utils.WriteSBf(sb, "  D=M+1")
@@ -80,10 +128,9 @@ func Return(fileName string, function string) (string, error) {
 	utils.WriteSBf(sb, "  M=D")
 	utils.WriteSBf(sb, "")
 
-	// restore caller segments
 	utils.WriteSBf(sb, "// restore caller segments")
-	for segment, offset := range callerSegments {
-		utils.WriteSBf(sb, "  @%d", offset)
+	for offset, segment := range callerSegments {
+		utils.WriteSBf(sb, "  @%d", offset+1)
 		utils.WriteSBf(sb, "  D=A")
 		utils.WriteSBf(sb, "  @endFrame")
 		utils.WriteSBf(sb, "  D=M-D")
@@ -94,7 +141,6 @@ func Return(fileName string, function string) (string, error) {
 		utils.WriteSBf(sb, "")
 	}
 
-	// goto retAddr
 	utils.WriteSBf(sb, "// goto retAddr")
 	utils.WriteSBf(sb, "  @retAddr")
 	utils.WriteSBf(sb, "  A=M")

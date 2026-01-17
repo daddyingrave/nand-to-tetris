@@ -23,9 +23,10 @@ func main() {
 	var vmFiles []string
 
 	targetFileName := ""
+	bootStrapRequired := false
 	if fileInfo.IsDir() {
 		targetFileName = filepath.Join(path, fileInfo.Name()+".asm")
-		files, err := os.ReadDir(fileInfo.Name())
+		files, err := os.ReadDir(path)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -35,6 +36,8 @@ func main() {
 				vmFiles = append(vmFiles, filepath.Join(path, file.Name()))
 			}
 		}
+
+		bootStrapRequired = true
 	} else if strings.HasSuffix(fileInfo.Name(), ".vm") {
 		targetFileName = strings.ReplaceAll(path, ".vm", ".asm")
 		vmFiles = append(vmFiles, path)
@@ -47,6 +50,16 @@ func main() {
 		log.Fatal(err)
 	}
 	defer asmFile.Close()
+
+	if bootStrapRequired {
+		bootstrapCode, err := code.BootstrapCode("Init")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if _, err := asmFile.WriteString(bootstrapCode); err != nil {
+			log.Fatalf("Fail to write bootstrap code: %s", err)
+		}
+	}
 
 	for _, vmFile := range vmFiles {
 		p := parser.NewParser(vmFile)
@@ -78,6 +91,10 @@ func main() {
 				}
 			case parser.IfGoto:
 				if err := writer.WriteIfGoTo(cmd.Arg1); err != nil {
+					log.Fatal(err)
+				}
+			case parser.Call:
+				if err := writer.WriteCall(cmd.Arg1, cmd.Arg2); err != nil {
 					log.Fatal(err)
 				}
 			case parser.Function:
