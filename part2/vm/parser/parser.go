@@ -27,14 +27,14 @@ const (
 	Pop
 	Label
 	Goto
-	If
+	IfGoto
 	Function
 	Return
 	Call
 )
 
-func (r *CommandType) String() string {
-	switch *r {
+func (r CommandType) String() string {
+	switch r {
 	case Arithmetic:
 		return "arithmetic"
 	case Push:
@@ -45,8 +45,8 @@ func (r *CommandType) String() string {
 		return "label"
 	case Goto:
 		return "goto"
-	case If:
-		return "if"
+	case IfGoto:
+		return "if-goto"
 	case Function:
 		return "function"
 	case Return:
@@ -117,6 +117,7 @@ func (r *parser) Commands(yield func(*Command, error) bool) {
 	if err != nil {
 		log.Fatalf("failed to open file '%s' with program code %s", r.path, err)
 	}
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
@@ -129,6 +130,10 @@ func (r *parser) Commands(yield func(*Command, error) bool) {
 		if line == "" || strings.HasPrefix(line, "//") {
 			continue
 		}
+		inlineCommentIndex := strings.Index(line, "//")
+		if inlineCommentIndex > 0 {
+			line = strings.TrimSpace(line[:inlineCommentIndex])
+		}
 
 		commandSplit := strings.Split(line, " ")
 		switch {
@@ -138,21 +143,24 @@ func (r *parser) Commands(yield func(*Command, error) bool) {
 			arg2 := strings.TrimSpace(commandSplit[2])
 
 			var actualType CommandType
-			if typ == "push" {
+			switch {
+			case typ == Push.String():
 				if _, exist := pushes[arg1]; !exist {
 					yield(nil, fmt.Errorf("unsupported push segment '%s' on line '%s:%d'", arg1, r.path, lineNumber))
 					return
 				}
-
 				actualType = Push
-			} else if typ == "pop" {
+			case typ == Pop.String():
 				if _, exist := pops[arg1]; !exist {
 					yield(nil, fmt.Errorf("unsupported pop segment '%s' on line '%s:%d'", arg1, r.path, lineNumber))
 					return
 				}
-
 				actualType = Pop
-			} else {
+			case typ == Function.String():
+				actualType = Function
+			case typ == Call.String():
+				actualType = Call
+			default:
 				yield(nil, fmt.Errorf("unexpected command type '%s' on line '%s:%d'", typ, r.path, lineNumber))
 				return
 			}
@@ -171,23 +179,57 @@ func (r *parser) Commands(yield func(*Command, error) bool) {
 			if !yield(cmd, nil) {
 				return
 			}
-		case len(commandSplit) == 1:
-			cmdRaw := strings.TrimSpace(commandSplit[0])
-			if _, exist := ArithmeticalCommands[cmdRaw]; !exist {
-				yield(nil, fmt.Errorf("unsupported command '%s' on line '%s:%d'", cmdRaw, r.path, lineNumber))
+
+		case len(commandSplit) == 2:
+			typ := strings.TrimSpace(commandSplit[0])
+			arg1 := strings.TrimSpace(commandSplit[1])
+
+			var actualType CommandType
+			switch {
+			case typ == Label.String():
+				actualType = Label
+			case typ == Goto.String():
+				actualType = Goto
+			case typ == IfGoto.String():
+				actualType = IfGoto
+			default:
+				yield(nil, fmt.Errorf("unexpected command type '%s' on line '%s:%d'", typ, r.path, lineNumber))
 				return
 			}
 
 			cmd := &Command{
-				Type: Arithmetic,
+				Type: actualType,
+				Arg1: arg1,
+			}
+			if !yield(cmd, nil) {
+				return
+			}
+
+		case len(commandSplit) == 1:
+			cmdRaw := strings.TrimSpace(commandSplit[0])
+
+			var actualType CommandType
+			if cmdRaw == Return.String() {
+				actualType = Return
+			} else {
+				if _, exist := ArithmeticalCommands[cmdRaw]; !exist {
+					yield(nil, fmt.Errorf("unsupported command '%s' on line '%s:%d'", cmdRaw, r.path, lineNumber))
+					return
+				}
+				actualType = Arithmetic
+			}
+
+			cmd := &Command{
+				Type: actualType,
 				Arg1: cmdRaw,
 			}
 			if !yield(cmd, nil) {
 				return
 			}
+
 		default:
 			yield(nil, fmt.Errorf(
-				"can't parse line '%s:%d', expexted extly 1 or 3 parts, but given '%+v",
+				"can't parse line '%s:%d', expected exactly 1 or 3 parts, but given '%+v",
 				r.path, lineNumber, commandSplit,
 			))
 

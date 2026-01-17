@@ -2,7 +2,6 @@ package code
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,11 +11,18 @@ import (
 type Writer interface {
 	WriteArithmetic(command string) error
 	WritePushPop(commandType parser.CommandType, segment string, index int) error
-	io.Closer
+	WriteLabel(label string) error
+	WriteGoTo(label string) error
+	WriteIfGoTo(label string) error
+	WriteCall(functionName string, nArgs int) error
+	WriteFunction(functionName string, nVars int) error
+	WriteReturn() error
 }
 
 type writer struct {
-	asmFile *os.File
+	asmFile         *os.File
+	vmFileName      string
+	currentFunction string
 }
 
 // 0 - stack pointer (SP)
@@ -30,14 +36,15 @@ type writer struct {
 // 16 - 255 - static variables
 // 256 - 2047 - stack
 
-func NewWriter(path string) (Writer, error) {
-	targetPath := strings.Replace(path, ".vm", ".asm", 1)
-	asmFile, err := os.OpenFile(targetPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return nil, fmt.Errorf("fail to open target file '%s' %w", targetPath, err)
-	}
+var defaultFunctionName = "global"
 
-	return writer{asmFile: asmFile}, nil
+func NewWriter(asmFile *os.File, vmFileName string) (Writer, error) {
+
+	return &writer{
+		asmFile:         asmFile,
+		vmFileName:      strings.TrimSuffix(vmFileName, ".vm"),
+		currentFunction: defaultFunctionName,
+	}, nil
 }
 
 var Labelled = map[string]int{
@@ -46,7 +53,7 @@ var Labelled = map[string]int{
 	"lt": 0,
 }
 
-func (r writer) WriteArithmetic(command string) error {
+func (r *writer) WriteArithmetic(command string) error {
 	count, exist := Labelled[command]
 	if exist {
 		count++
@@ -87,21 +94,20 @@ func (r writer) WriteArithmetic(command string) error {
 
 var staticMappings = map[string]int{}
 
-func (r writer) WritePushPop(commandType parser.CommandType, segment string, index int) error {
+func (r *writer) WritePushPop(commandType parser.CommandType, segment string, index int) error {
 	var err error
 	var generatedCode string
 
-	asmFileName := r.asmFile.Name()
-	_, asmFileName = filepath.Split(asmFileName)
+	_, vmFileNameOnly := filepath.Split(r.vmFileName)
 	if segment == parser.SegmentStatic {
-		staticMappings[asmFileName]++
+		staticMappings[vmFileNameOnly]++
 	}
 
 	switch commandType {
 	case parser.Push:
-		generatedCode, err = StackPush(segment, index, asmFileName)
+		generatedCode, err = StackPush(segment, index, vmFileNameOnly)
 	case parser.Pop:
-		generatedCode, err = StackPop(segment, index, asmFileName)
+		generatedCode, err = StackPop(segment, index, vmFileNameOnly)
 	default:
 		return fmt.Errorf("unsupported command type '%s'", commandType.String())
 	}
@@ -109,20 +115,102 @@ func (r writer) WritePushPop(commandType parser.CommandType, segment string, ind
 	if err != nil {
 		return fmt.Errorf(
 			"fail to write command '%s', segment '%s', index '%d', to file '%s'",
-			commandType.String(), segment, index, asmFileName,
+			commandType.String(), segment, index, r.asmFile.Name(),
 		)
 	}
 
 	if _, err := r.asmFile.WriteString(generatedCode); err != nil {
 		return fmt.Errorf(
 			"fail to write command '%s' segment '%s', index '%d', to file '%s' %w",
-			commandType.String(), segment, index, asmFileName, err,
+			commandType.String(), segment, index, r.asmFile.Name(), err,
 		)
 	}
 
 	return nil
 }
 
-func (r writer) Close() error {
-	return r.asmFile.Close()
+func (r *writer) WriteLabel(label string) error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	if _, err := r.asmFile.WriteString(Label(fileName, r.currentFunction, label)); err != nil {
+		return fmt.Errorf("fail to write command label '%s', to file '%s' %w", label, r.asmFile.Name(), err)
+	}
+
+	return nil
+}
+
+func (r *writer) WriteGoTo(label string) error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	if _, err := r.asmFile.WriteString(GoTo(fileName, r.currentFunction, label)); err != nil {
+		return fmt.Errorf("fail to write command goto '%s', to file '%s' %w", label, r.asmFile.Name(), err)
+	}
+
+	return nil
+}
+
+func (r *writer) WriteIfGoTo(label string) error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	if _, err := r.asmFile.WriteString(IfGoTo(fileName, r.currentFunction, label)); err != nil {
+		return fmt.Errorf("fail to write command if-goto '%s', to file '%s' %w", label, r.asmFile.Name(), err)
+	}
+
+	return nil
+}
+
+var functionCallsCount = map[string]int{}
+
+func (r *writer) WriteCall(functionName string, nArgs int) error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	count := functionCallsCount[fmt.Sprintf("%s/%s", fileName, r.currentFunction)]
+	count++
+	functionCallsCount[fmt.Sprintf("%s/%s", fileName, r.currentFunction)] = count
+
+	callCode, err := Call(fileName, r.currentFunction, functionName, nArgs, count)
+	if err != nil {
+		return fmt.Errorf("fail to generate call code  '%s/%s/%d' %w", r.currentFunction, functionName, nArgs, err)
+	}
+	if _, err := r.asmFile.WriteString(callCode); err != nil {
+		return fmt.Errorf("fail to write command call '%s/%d', to file '%s' %w", functionName, nArgs, r.asmFile.Name(), err)
+	}
+
+	return nil
+}
+
+func (r *writer) WriteFunction(fnName string, nVars int) error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	r.currentFunction = fnName
+
+	functionCode, err := Function(fileName, fnName, nVars)
+	if err != nil {
+		return fmt.Errorf("fail to generate function code '%s/%d' %w", fnName, nVars, err)
+	}
+	if _, err := r.asmFile.WriteString(functionCode); err != nil {
+		return fmt.Errorf("fail to write command function '%s/%d', to file '%s' %w", fnName, nVars, r.asmFile.Name(), err)
+	}
+
+	return nil
+}
+
+func (r *writer) WriteReturn() error {
+	_, fn := filepath.Split(r.vmFileName)
+	fileName := strings.ReplaceAll(fn, ".asm", "")
+
+	returnCode, err := Return(fileName, r.currentFunction)
+	if err != nil {
+		return fmt.Errorf("fail to generate return code for function '%s' %w", r.currentFunction, err)
+	}
+	if _, err := r.asmFile.WriteString(returnCode); err != nil {
+		return fmt.Errorf("fail to write command return for function '%s', to file '%s' %w", r.currentFunction, r.asmFile.Name(), err)
+	}
+
+	return nil
 }

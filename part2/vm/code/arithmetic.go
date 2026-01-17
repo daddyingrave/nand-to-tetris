@@ -1,198 +1,198 @@
 package code
 
 import (
-	"fmt"
 	"strings"
+	"vm/internal/utils"
 )
 
 func Add() string {
 	sb := &strings.Builder{}
-	sb.WriteString("// add\n\n")
+	utils.WriteSBf(sb, "// add\n")
 	popBinary(sb)
 
-	sb.WriteString("  D=D+M\n")
+	utils.WriteSBf(sb, "  D=D+M")
 
 	writeBackBinary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func Sub() string {
 	sb := &strings.Builder{}
-	sb.WriteString("// sub\n\n")
+	utils.WriteSBf(sb, "// sub\n")
 	popBinary(sb)
 
-	sb.WriteString("  D=M-D\n")
+	utils.WriteSBf(sb, "  D=M-D")
 
 	writeBackBinary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func Neg() string {
 	sb := &strings.Builder{}
-	sb.WriteString("// neg\n\n")
+	utils.WriteSBf(sb, "// neg\n")
 	popUnary(sb)
 
-	sb.WriteString("  D=-D\n")
+	utils.WriteSBf(sb, "  D=-D")
 
 	writeBackUnary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func Eq(counter int) string {
 	sb := &strings.Builder{}
-	sb.WriteString("// eq\n\n")
+	utils.WriteSBf(sb, "// eq\n")
 	popBinary(sb)
 
-	sb.WriteString("  D=D-M\n")
-	sb.WriteString(fmt.Sprintf("  @EQ_%d\n", counter))
-	sb.WriteString("  D;JEQ\n")
-	sb.WriteString(fmt.Sprintf("  @NOT_EQ_%d\n", counter))
-	sb.WriteString("  D;JNE\n")
-	sb.WriteString(fmt.Sprintf("(EQ_%d)\n", counter))
-	sb.WriteString("  D=-1\n")
-	sb.WriteString(fmt.Sprintf("  @EQ_END_%d\n", counter))
-	sb.WriteString("  D;JMP\n")
-	sb.WriteString(fmt.Sprintf("(NOT_EQ_%d)\n", counter))
-	sb.WriteString("  D=0\n")
-	sb.WriteString(fmt.Sprintf("(EQ_END_%d)\n", counter))
+	utils.WriteSBf(sb, "  D=D-M")
+	utils.WriteSBf(sb, "  @EQ_%d", counter)
+	utils.WriteSBf(sb, "  D;JEQ")
+	utils.WriteSBf(sb, "  @NOT_EQ_%d", counter)
+	utils.WriteSBf(sb, "  D;JNE")
+	utils.WriteSBf(sb, "(EQ_%d)", counter)
+	utils.WriteSBf(sb, "  D=-1")
+	utils.WriteSBf(sb, "  @EQ_END_%d", counter)
+	utils.WriteSBf(sb, "  D;JMP")
+	utils.WriteSBf(sb, "(NOT_EQ_%d)", counter)
+	utils.WriteSBf(sb, "  D=0")
+	utils.WriteSBf(sb, "(EQ_END_%d)", counter)
 
 	writeBackBinary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func Gt(counter int) string {
 	sb := &strings.Builder{}
-	sb.WriteString("// gt\n\n")
+	utils.WriteSBf(sb, "// gt\n")
 	popBinary(sb)
 
-	sb.WriteString("  D=M-D\n")
-	sb.WriteString(fmt.Sprintf("  @GT_%d\n", counter))
-	sb.WriteString("  D;JGT\n")
-	sb.WriteString(fmt.Sprintf("  @NOT_GT_%d\n", counter))
-	sb.WriteString("  D;JMP\n")
-	sb.WriteString(fmt.Sprintf("(GT_%d)\n", counter))
-	sb.WriteString("  D=-1\n")
-	sb.WriteString(fmt.Sprintf("  @GT_END_%d\n", counter))
-	sb.WriteString("  D;JMP\n")
-	sb.WriteString(fmt.Sprintf("(NOT_GT_%d)\n", counter))
-	sb.WriteString("  D=0\n")
-	sb.WriteString(fmt.Sprintf("(GT_END_%d)\n", counter))
+	utils.WriteSBf(sb, "  D=M-D")
+	utils.WriteSBf(sb, "  @GT_%d", counter)
+	utils.WriteSBf(sb, "  D;JGT")
+	utils.WriteSBf(sb, "  @NOT_GT_%d", counter)
+	utils.WriteSBf(sb, "  D;JMP")
+	utils.WriteSBf(sb, "(GT_%d)", counter)
+	utils.WriteSBf(sb, "  D=-1")
+	utils.WriteSBf(sb, "  @GT_END_%d", counter)
+	utils.WriteSBf(sb, "  D;JMP")
+	utils.WriteSBf(sb, "(NOT_GT_%d)", counter)
+	utils.WriteSBf(sb, "  D=0")
+	utils.WriteSBf(sb, "(GT_END_%d)", counter)
 
 	writeBackBinary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func Lt(counter int) string {
 	sb := &strings.Builder{}
-	sb.WriteString("// lt\n\n")
+	utils.WriteSBf(sb, "// lt\n")
 	popBinary(sb)
 
-	sb.WriteString("  D=M-D\n")
-	sb.WriteString(fmt.Sprintf("  @LT_%d\n", counter))
-	sb.WriteString("  D;JLT\n")
-	sb.WriteString(fmt.Sprintf("  @NOT_LT_%d\n", counter))
-	sb.WriteString("  D;JMP\n")
-	sb.WriteString(fmt.Sprintf("(LT_%d)\n", counter))
-	sb.WriteString("  D=-1\n")
-	sb.WriteString(fmt.Sprintf("  @LT_END_%d\n", counter))
-	sb.WriteString("  D;JMP\n")
-	sb.WriteString(fmt.Sprintf("(NOT_LT_%d)\n", counter))
-	sb.WriteString("  D=0\n")
-	sb.WriteString(fmt.Sprintf("(LT_END_%d)\n", counter))
+	utils.WriteSBf(sb, "  D=M-D")
+	utils.WriteSBf(sb, "  @LT_%d", counter)
+	utils.WriteSBf(sb, "  D;JLT")
+	utils.WriteSBf(sb, "  @NOT_LT_%d", counter)
+	utils.WriteSBf(sb, "  D;JMP")
+	utils.WriteSBf(sb, "(LT_%d)", counter)
+	utils.WriteSBf(sb, "  D=-1")
+	utils.WriteSBf(sb, "  @LT_END_%d", counter)
+	utils.WriteSBf(sb, "  D;JMP")
+	utils.WriteSBf(sb, "(NOT_LT_%d)", counter)
+	utils.WriteSBf(sb, "  D=0")
+	utils.WriteSBf(sb, "(LT_END_%d)", counter)
 
 	writeBackBinary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func And() string {
 	sb := &strings.Builder{}
-	sb.WriteString("// and\n\n")
+	utils.WriteSBf(sb, "// and\n")
 	popBinary(sb)
 
-	sb.WriteString("  D=D&M\n")
+	utils.WriteSBf(sb, "  D=D&M")
 
 	writeBackBinary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func Or() string {
 	sb := &strings.Builder{}
-	sb.WriteString("// or\n\n")
+	utils.WriteSBf(sb, "// or\n")
 	popBinary(sb)
 
-	sb.WriteString("  D=D|M\n")
+	utils.WriteSBf(sb, "  D=D|M")
 
 	writeBackBinary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func Not() string {
 	sb := &strings.Builder{}
-	sb.WriteString("// not\n\n")
+	utils.WriteSBf(sb, "// not\n")
 	popUnary(sb)
 
-	sb.WriteString("  D=-D\n")
-	sb.WriteString("  D=D-1\n")
+	utils.WriteSBf(sb, "  D=-D")
+	utils.WriteSBf(sb, "  D=D-1")
 
 	writeBackUnary(sb)
-	sb.WriteString("\n")
+	utils.WriteSBf(sb, "")
 
 	return sb.String()
 }
 
 func popBinary(sb *strings.Builder) *strings.Builder {
-	sb.WriteString("  @SP\n")
-	sb.WriteString("  A=M\n")
-	sb.WriteString("  A=A-1\n")
-	sb.WriteString("  D=M\n")
-	sb.WriteString("  A=A-1\n")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  A=M")
+	utils.WriteSBf(sb, "  A=A-1")
+	utils.WriteSBf(sb, "  D=M")
+	utils.WriteSBf(sb, "  A=A-1")
 
 	return sb
 }
 
 func popUnary(sb *strings.Builder) *strings.Builder {
-	sb.WriteString("  @SP\n")
-	sb.WriteString("  A=M\n")
-	sb.WriteString("  A=A-1\n")
-	sb.WriteString("  D=M\n")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  A=M")
+	utils.WriteSBf(sb, "  A=A-1")
+	utils.WriteSBf(sb, "  D=M")
 
 	return sb
 }
 
 func writeBackBinary(sb *strings.Builder) *strings.Builder {
-	sb.WriteString("  @SP\n")
-	sb.WriteString("  A=M\n")
-	sb.WriteString("  A=A-1\n")
-	sb.WriteString("  A=A-1\n")
-	sb.WriteString("  M=D\n")
-	sb.WriteString("  D=A+1\n")
-	sb.WriteString("  @SP\n")
-	sb.WriteString("  M=D\n")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  A=M")
+	utils.WriteSBf(sb, "  A=A-1")
+	utils.WriteSBf(sb, "  A=A-1")
+	utils.WriteSBf(sb, "  M=D")
+	utils.WriteSBf(sb, "  D=A+1")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  M=D")
 
 	return sb
 }
 
 func writeBackUnary(sb *strings.Builder) *strings.Builder {
-	sb.WriteString("  @SP\n")
-	sb.WriteString("  A=M\n")
-	sb.WriteString("  A=A-1\n")
-	sb.WriteString("  M=D\n")
+	utils.WriteSBf(sb, "  @SP")
+	utils.WriteSBf(sb, "  A=M")
+	utils.WriteSBf(sb, "  A=A-1")
+	utils.WriteSBf(sb, "  M=D")
 
 	return sb
 }
