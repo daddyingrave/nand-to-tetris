@@ -1,0 +1,20 @@
+class Star {
+    function void draw(int location) {
+        var int memAddress;
+        let memAddress = 16384 + location;
+        do Memory.poke(memAddress + 32, 384);
+        do Memory.poke(memAddress + 64, 384);
+        do Memory.poke(memAddress + 96, 384);
+        do Memory.poke(memAddress + 128, 384);
+        do Memory.poke(memAddress + 160, 960);
+        do Memory.poke(memAddress + 192, 32766);
+        do Memory.poke(memAddress + 224, 8184);
+        do Memory.poke(memAddress + 256, 4080);
+        do Memory.poke(memAddress + 288, 2016);
+        do Memory.poke(memAddress + 320, 2016);
+        do Memory.poke(memAddress + 352, 2016);
+        do Memory.poke(memAddress + 384, 3696);
+        do Memory.poke(memAddress + 416, 2064);
+        return;
+    }
+}

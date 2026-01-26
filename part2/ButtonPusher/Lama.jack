@@ -1,0 +1,101 @@
+class Lama {
+    function void draw(int location, boolean frame) {
+        if (frame) {
+            do Lama.drawB(location);
+        } else {
+            do Lama.drawA(location);
+        }
+        return;
+    }
+
+    function void drawA(int location) {
+        var int memAddress;
+        var int i;
+        let memAddress = 16384 + location;
+        
+        // Head & Ears
+        do Memory.poke(memAddress + 0, Memory.peek(memAddress + 0) | 516);
+        do Memory.poke(memAddress + 32, Memory.peek(memAddress + 32) | 516);
+        do Memory.poke(memAddress + 64, Memory.peek(memAddress + 64) | 1020);
+        do Memory.poke(memAddress + 96, Memory.peek(memAddress + 96) | 1020);
+        do Memory.poke(memAddress + 128, Memory.peek(memAddress + 128) | 900);
+        do Memory.poke(memAddress + 160, Memory.peek(memAddress + 160) | 1020);
+
+        // Neck
+        let i = 6;
+        while (i < 30) {
+            do Memory.poke(memAddress + (i * 32), Memory.peek(memAddress + (i * 32)) | 252);
+            let i = i + 1;
+        }
+
+        // Body
+        let i = 30;
+        while (i < 42) {
+            do Memory.poke(memAddress + (i * 32), Memory.peek(memAddress + (i * 32)) | -4);
+            do Memory.poke(memAddress + (i * 32) + 1, Memory.peek(memAddress + (i * 32) + 1) | 1023);
+            let i = i + 1;
+        }
+
+        // Legs
+        let i = 42;
+        while (i < 48) {
+            do Memory.poke(memAddress + (i * 32), Memory.peek(memAddress + (i * 32)) | 252);
+            do Memory.poke(memAddress + (i * 32) + 1, Memory.peek(memAddress + (i * 32) + 1) | 960);
+            let i = i + 1;
+        }
+        return;
+    }
+
+    function void drawB(int location) {
+        var int memAddress;
+        var int i;
+        let memAddress = 16384 + location;
+        
+        // Head & Ears (same as A)
+        do Memory.poke(memAddress + 0, Memory.peek(memAddress + 0) | 516);
+        do Memory.poke(memAddress + 32, Memory.peek(memAddress + 32) | 516);
+        do Memory.poke(memAddress + 64, Memory.peek(memAddress + 64) | 1020);
+        do Memory.poke(memAddress + 96, Memory.peek(memAddress + 96) | 1020);
+        do Memory.poke(memAddress + 128, Memory.peek(memAddress + 128) | 900);
+        do Memory.poke(memAddress + 160, Memory.peek(memAddress + 160) | 1020);
+
+        // Neck
+        let i = 6;
+        while (i < 30) {
+            do Memory.poke(memAddress + (i * 32), Memory.peek(memAddress + (i * 32)) | 252);
+            let i = i + 1;
+        }
+
+        // Body
+        let i = 30;
+        while (i < 42) {
+            do Memory.poke(memAddress + (i * 32), Memory.peek(memAddress + (i * 32)) | -4);
+            do Memory.poke(memAddress + (i * 32) + 1, Memory.peek(memAddress + (i * 32) + 1) | 1023);
+            let i = i + 1;
+        }
+
+        // Legs (different from A)
+        let i = 42;
+        while (i < 48) {
+            do Memory.poke(memAddress + (i * 32), Memory.peek(memAddress + (i * 32)) | 504);
+            do Memory.poke(memAddress + (i * 32) + 1, Memory.peek(memAddress + (i * 32) + 1) | 480);
+            let i = i + 1;
+        }
+        return;
+    }
+
+    function void erase(int location) {
+        var int memAddress;
+        var int i;
+        let memAddress = 16384 + location;
+        let i = 0;
+        while (i < 48) {
+            do Memory.poke(memAddress + 0, 0);
+            do Memory.poke(memAddress + 1, 0);
+            do Memory.poke(memAddress + 2, 0);
+            let memAddress = memAddress + 32;
+            let i = i + 1;
+        }
+        return;
+    }
+}

@@ -1,0 +1,77 @@
+class Pet {
+    field int type; // 0=Hamster, 1=Cat, 2=Lama
+    field int x, y;
+    field int startX;
+    field int state; // 0=Idle, 1=Attack
+    field int timer;
+    field int attackThreshold;
+    field Pet next;
+
+    constructor Pet new(int Atype, int Ax, int Ay, int AattackThreshold, Pet Anext) {
+        let type = Atype;
+        let x = Ax;
+        let startX = Ax;
+        let y = Ay;
+        let state = 0;
+        let timer = 0;
+        let attackThreshold = AattackThreshold;
+        let next = Anext;
+        return this;
+    }
+
+    method void dispose() {
+        var Pet curr, temp;
+        let curr = next;
+        while (~(curr = 0)) {
+            let temp = curr.getNext();
+            do curr.disposeSingle();
+            let curr = temp;
+        }
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void disposeSingle() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method Pet getNext() { return next; }
+    method void setTimer(int t) { let timer = t; return; }
+
+    method void updateState(Shop shop, int multiplier) {
+        var int income;
+        
+        if (state = 0) {
+            let timer = timer + 1;
+            if (timer > attackThreshold) {
+                let timer = 0;
+                let state = 1;
+            }
+        }
+
+        if (state = 1) {
+            let x = x - 1;
+            
+            if (x < 22) { 
+                let income = multiplier / 2;
+                if (income < 1) { let income = 1; }
+                do shop.incMoney(income);
+                let x = startX;
+                let state = 0;
+            }
+        }
+        return;
+    }
+
+    method void draw(boolean frame) {
+        var int location;
+        let location = (y * 32) + x;
+        if (type = 0) { do Hamster.draw(location, frame); }
+        if (type = 1) { do Cat.draw(location, frame); }
+        if (type = 2) { do Lama.draw(location, frame); }
+        return;
+    }
+
+    // Removed erase as it's handled by Game clear loop
+}

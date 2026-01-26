@@ -1,0 +1,307 @@
+class Shop {
+    field int money;
+    field int multiplier;
+    field int selectedItem; // 0-2 upgrades, 3-5 pets
+    field int level; // 0=x1, 1=x2, 2=x4, 3=x8
+    field int difficulty;
+    field int cost1, cost2, cost3;
+    field int petCost1, petCost2, petCost3;
+    field int hamsterCount, catCount, lamaCount;
+    
+    constructor Shop new(int aDifficulty) {
+        let money = 0;
+        let multiplier = 1;
+        let selectedItem = 0;
+        let level = 0;
+        let difficulty = aDifficulty;
+        let hamsterCount = 0;
+        let catCount = 0;
+        let lamaCount = 0;
+
+        // Set costs based on difficulty
+        if (difficulty = 0) { 
+            let cost1 = 50;   let cost2 = 100;   let cost3 = 200; 
+            let petCost1 = 500; let petCost2 = 1000; let petCost3 = 2500;
+        }
+        if (difficulty = 1) { 
+            let cost1 = 200;  let cost2 = 1000;  let cost3 = 10000; 
+            let petCost1 = 2000; let petCost2 = 5000; let petCost3 = 15000;
+        }
+        if (difficulty = 2) { 
+            let cost1 = 1000; let cost2 = 10000; let cost3 = 30000; 
+            let petCost1 = 5000; let petCost2 = 15000; let petCost3 = 30000;
+        }
+        if (difficulty = 3) { 
+            let cost1 = 10;   let cost2 = 20;   let cost3 = 40; 
+            let petCost1 = 100; let petCost2 = 200; let petCost3 = 500;
+        }
+        
+        do drawFrame();
+        do updateMoneyDisplay();
+        do drawMenu();
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method int getMultiplier() {
+        return multiplier;
+    }
+
+    method int getLevel() {
+        return level;
+    }
+
+    method boolean getHasHamster() { return hamsterCount > 0; }
+    method boolean getHasCat() { return catCount > 0; }
+    method boolean getHasLama() { return lamaCount > 0; }
+
+    method int getHamsterCount() { return hamsterCount; }
+    method int getCatCount() { return catCount; }
+    method int getLamaCount() { return lamaCount; }
+
+    method void drawFrame() {
+        var String s;
+        // Draw borders
+        do Screen.setColor(true);
+        do Screen.drawLine(0, 0, 208, 0);      // Top
+        do Screen.drawLine(0, 0, 0, 240);      // Left
+        do Screen.drawLine(208, 0, 208, 240);  // Right
+        do Screen.drawLine(0, 240, 208, 240);  // Bottom
+
+        do Output.moveCursor(1, 11); 
+        let s = "Shop";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Star.draw(260); 
+        do Star.draw(264);
+        do Output.moveCursor(3, 2);
+        let s = "money$$$:";
+        do Output.printString(s);
+        do s.dispose();
+        return;
+    }
+
+    method void drawMenu() {
+        var String s;
+        // Upgrades
+        do Output.moveCursor(5, 3);
+        let s = "x2";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(5, 13);
+        if (level < 1) { 
+            do Output.printChar(40); // "("
+            do Output.printInt(cost1); 
+            let s = "$)";
+            do Output.printString(s);
+            do s.dispose();
+        }
+        else { 
+            let s = "(SOLD)   ";
+            do Output.printString(s);
+            do s.dispose();
+        }
+
+        do Output.moveCursor(6, 3);
+        let s = "x4";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(6, 13);
+        if (level < 2) { 
+            do Output.printChar(40); 
+            do Output.printInt(cost2); 
+            let s = "$)";
+            do Output.printString(s);
+            do s.dispose();
+        }
+        else { 
+            let s = "(SOLD)   ";
+            do Output.printString(s);
+            do s.dispose();
+        }
+
+        do Output.moveCursor(7, 3);
+        let s = "x8";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(7, 13);
+        if (level < 3) { 
+            do Output.printChar(40); 
+            do Output.printInt(cost3); 
+            let s = "$)";
+            do Output.printString(s);
+            do s.dispose();
+        }
+        else { 
+            let s = "(SOLD)   ";
+            do Output.printString(s);
+            do s.dispose();
+        }
+
+        // Pets
+        do Output.moveCursor(9, 3);
+        let s = "Hamster";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(9, 13);
+        let s = "(x";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.printInt(hamsterCount); 
+        do Output.printChar(41); // ")"
+
+        do Output.moveCursor(9, 19);
+        do Output.printInt(petCost1); 
+        let s = "$  ";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(10, 3);
+        let s = "Cat";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(10, 13);
+        let s = "(x";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.printInt(catCount); 
+        do Output.printChar(41);
+
+        do Output.moveCursor(10, 19);
+        do Output.printInt(petCost2); 
+        let s = "$  ";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(11, 3);
+        let s = "Lama";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(11, 13);
+        let s = "(x";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.printInt(lamaCount); 
+        do Output.printChar(41);
+
+        do Output.moveCursor(11, 19);
+        do Output.printInt(petCost3); 
+        let s = "$  ";
+        do Output.printString(s);
+        do s.dispose();
+
+        do drawSelectionCursor();
+        return;
+    }
+
+    method void drawSelectionCursor() {
+        var int row;
+        // Clear all possible cursor locations
+        do Output.moveCursor(5, 1); do Output.printChar(32);
+        do Output.moveCursor(6, 1); do Output.printChar(32);
+        do Output.moveCursor(7, 1); do Output.printChar(32);
+        do Output.moveCursor(9, 1); do Output.printChar(32);
+        do Output.moveCursor(10, 1); do Output.printChar(32);
+        do Output.moveCursor(11, 1); do Output.printChar(32);
+
+        // Calculate visual row
+        if (selectedItem < 3) { let row = 5 + selectedItem; }
+        else { let row = 9 + (selectedItem - 3); } // Skip row 8 for spacing
+
+        do Output.moveCursor(row, 1);
+        do Output.printChar(62); // ">"
+        return;
+    }
+
+    method void incMoney(int amount) {
+        let money = money + amount;
+        do updateMoneyDisplay();
+        return;
+    }
+
+    method void updateMoneyDisplay() {
+        do Output.moveCursor(3, 12);
+        do Output.printInt(money);
+        do Output.printChar(32); // Clear trailing digits
+        do Output.printChar(32);
+        return;
+    }
+
+
+    method boolean handleInput(char key) {
+        if (key = 131) { // Arrow Up
+            if (selectedItem > 0) {
+                let selectedItem = selectedItem - 1;
+                do drawSelectionCursor();
+            }
+        }
+        if (key = 133) { // Arrow Down
+            if (selectedItem < 5) {
+                let selectedItem = selectedItem + 1;
+                do drawSelectionCursor();
+            }
+        }
+        if (key = 128) { // Enter
+            return tryBuy();
+        }
+        return true;
+    }
+
+    method boolean tryBuy() {
+        var boolean success;
+        let success = true;
+
+        if (selectedItem = 0) { let success = buyUpgrade(1, cost1, 2); }
+        if (selectedItem = 1) { let success = buyUpgrade(2, cost2, 4); }
+        if (selectedItem = 2) { let success = buyUpgrade(3, cost3, 8); }
+        if (selectedItem = 3) { let success = buyPet(0); }
+        if (selectedItem = 4) { let success = buyPet(1); }
+        if (selectedItem = 5) { let success = buyPet(2); }
+        
+        return success;
+    }
+
+    method boolean buyUpgrade(int nextLevel, int cost, int nextMult) {
+        if (level < nextLevel) {
+            if (money < cost) { return false; }
+            let money = money - cost;
+            let level = nextLevel;
+            let multiplier = nextMult;
+            do updateMoneyDisplay();
+            do drawMenu();
+        }
+        return true;
+    }
+
+    method boolean buyPet(int petIndex) {
+        var int cost;
+
+        if (petIndex = 0) { let cost = petCost1; }
+        if (petIndex = 1) { let cost = petCost2; }
+        if (petIndex = 2) { let cost = petCost3; }
+
+        if (money < cost) { return false; }
+        let money = money - cost;
+        if (petIndex = 0) { let hamsterCount = hamsterCount + 1; }
+        if (petIndex = 1) { let catCount = catCount + 1; }
+        if (petIndex = 2) { let lamaCount = lamaCount + 1; }
+        do updateMoneyDisplay();
+        do drawMenu();
+        return true;
+    }
+
+}
