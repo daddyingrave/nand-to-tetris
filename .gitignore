@@ -3,3 +3,5 @@
 project*.zip
 VMTranslator
 part2/vm/testdata
+**/.DS_Store
+.gemini-clipboard/*

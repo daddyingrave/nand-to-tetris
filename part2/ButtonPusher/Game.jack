@@ -1,0 +1,289 @@
+class Game {
+    field Button button;
+    field Shop shop;
+    field Pet hamster, cat, lama;
+    field int hCount, cCount, lCount;
+    field int difficulty;
+    field boolean gameRunning;
+    field boolean wasPressed;
+    field int frameTimer;
+    field int frameState;
+    field String sPush;
+
+    constructor Game new() {
+        let sPush = "PUSH SPACE";
+        return this;
+    }
+
+    method void dispose() {
+        if (~(button = 0)) { do button.dispose(); }
+        if (~(shop = 0)) { do shop.dispose(); }
+        if (~(hamster = 0)) { do hamster.dispose(); }
+        if (~(cat = 0)) { do cat.dispose(); }
+        if (~(lama = 0)) { do lama.dispose(); }
+        if (~(sPush = 0)) { do sPush.dispose(); }
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    function void run() {
+        var Game game;
+        while (true) {
+            let game = Game.new();
+            do game.selectDifficulty();
+            do game.setup();
+            do game.loop();
+            do game.gameOver();
+            do game.dispose();
+        }
+        return;
+    }
+
+    method void selectDifficulty() {
+        var char key;
+        var String s;
+        do Screen.clearScreen();
+
+        // Game Title
+        do Output.moveCursor(6, 18);
+        let s = "Button Pusher: Pets Revenge";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(10, 20);
+        let s = "Select Difficulty:";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(12, 22);
+        let s = "1: Easy";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(13, 22);
+        let s = "2: Normal";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(14, 22);
+        let s = "3: Hard";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(15, 22);
+        let s = "4: Debug";
+        do Output.printString(s);
+        do s.dispose();
+        
+        let key = 0;
+        while (~((key > 48) & (key < 53))) {
+            let key = Keyboard.keyPressed();
+        }
+        let difficulty = key - 49;
+        do Screen.clearScreen();
+        return;
+    }
+
+    method void setup() {
+        let shop = Shop.new(difficulty);
+        let button = Button.new(272, 96);
+        do button.draw(false);
+
+        let wasPressed = false;
+        let gameRunning = true;
+        let frameTimer = 0;
+        let frameState = 0;
+
+        let hamster = 0;
+        let cat = 0;
+        let lama = 0;
+        let hCount = 0;
+        let cCount = 0;
+        let lCount = 0;
+        
+        do checkNewPets();
+        return;
+    }
+
+    method void loop() {
+        var char key;
+        var boolean isPressed;
+
+        while (gameRunning) {
+            let key = Keyboard.keyPressed();
+            let isPressed = (key = 32);
+
+            // Shop Input
+            if ((key = 131) | (key = 133) | (key = 128)) {
+                if (~(shop.handleInput(key))) {
+                    let gameRunning = false;
+                }
+                if (gameRunning) {
+                    do checkNewPets();
+                    do button.setLevel(shop.getLevel());
+                }
+                do Sys.wait(150);
+            }
+
+            if (gameRunning) {
+                // Button Click Logic
+                if (~(isPressed = wasPressed)) {
+                    if (isPressed) {
+                        do shop.incMoney(shop.getMultiplier());
+                    }
+                    let wasPressed = isPressed;
+                }
+
+                // Animation & Logic
+                let frameTimer = frameTimer + 1;
+                if (frameTimer > 25) {
+                    let frameTimer = 0;
+                    let frameState = ~frameState;
+                }
+
+                do updatePets();
+                
+                // Rendering
+                do clearPetArea();
+                do drawButtonTitle();
+                do button.draw(isPressed);
+                do drawPets();
+            }
+            do Sys.wait(20);
+        }
+        return;
+    }
+
+    method void drawButtonTitle() {
+        do Output.moveCursor(1, 33);
+        do Output.printString(sPush);
+        
+        // Draw a simple arrow
+        do Screen.setColor(true);
+        do Screen.drawLine(304, 25, 304, 45); // Vertical line
+        do Screen.drawLine(304, 45, 299, 40); // Left head
+        do Screen.drawLine(304, 45, 309, 40); // Right head
+        return;
+    }
+
+    method void checkNewPets() {
+        while (hCount < shop.getHamsterCount()) {
+            let hamster = Pet.new(0, 26 + (hCount - (6 * (hCount / 6))), 50, 250, hamster);
+            let hCount = hCount + 1;
+            do hamster.setTimer(hCount * 30);
+        }
+        while (cCount < shop.getCatCount()) {
+            let cat = Pet.new(1, 26 + (cCount - (6 * (cCount / 6))), 100, 100, cat);
+            let cCount = cCount + 1;
+            do cat.setTimer(cCount * 25);
+        }
+        while (lCount < shop.getLamaCount()) {
+            let lama = Pet.new(2, 26 + (lCount - (5 * (lCount / 5))), 150, 50, lama);
+            let lCount = lCount + 1;
+            do lama.setTimer(lCount * 20);
+        }
+        return;
+    }
+
+    method void updatePets() {
+        var Pet curr;
+        let curr = hamster;
+        while (~(curr = 0)) {
+            do curr.updateState(shop, shop.getMultiplier());
+            let curr = curr.getNext();
+        }
+        let curr = cat;
+        while (~(curr = 0)) {
+            do curr.updateState(shop, shop.getMultiplier());
+            let curr = curr.getNext();
+        }
+        let curr = lama;
+        while (~(curr = 0)) {
+            do curr.updateState(shop, shop.getMultiplier());
+            let curr = curr.getNext();
+        }
+        return;
+    }
+
+    method void drawPets() {
+        var Pet curr;
+        // Draw from head to tail (head is newest, drawn on top)
+        // Wait, if I want head to be on top, I draw it LAST.
+        // So I should draw tail to head?
+        // Let's draw head to tail and see.
+        let curr = hamster;
+        while (~(curr = 0)) {
+            do curr.draw(frameState);
+            let curr = curr.getNext();
+        }
+        let curr = cat;
+        while (~(curr = 0)) {
+            do curr.draw(frameState);
+            let curr = curr.getNext();
+        }
+        let curr = lama;
+        while (~(curr = 0)) {
+            do curr.draw(frameState);
+            let curr = curr.getNext();
+        }
+        return;
+    }
+
+    method void clearPetArea() {
+        var int i, memAddress;
+        let i = 0;
+        while (i < 256) {
+            let memAddress = 16384 + (i * 32) + 16;
+            // Clear Words 16-31
+            do Memory.poke(memAddress, 0);
+            do Memory.poke(memAddress + 1, 0);
+            do Memory.poke(memAddress + 2, 0);
+            do Memory.poke(memAddress + 3, 0);
+            do Memory.poke(memAddress + 4, 0);
+            do Memory.poke(memAddress + 5, 0);
+            do Memory.poke(memAddress + 6, 0);
+            do Memory.poke(memAddress + 7, 0);
+            do Memory.poke(memAddress + 8, 0);
+            do Memory.poke(memAddress + 9, 0);
+            do Memory.poke(memAddress + 10, 0);
+            do Memory.poke(memAddress + 11, 0);
+            do Memory.poke(memAddress + 12, 0);
+            do Memory.poke(memAddress + 13, 0);
+            do Memory.poke(memAddress + 14, 0);
+            do Memory.poke(memAddress + 15, 0);
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method void gameOver() {
+        var char key;
+        var String s;
+        do Screen.clearScreen();
+        do Output.moveCursor(8, 26);
+        let s = "GAME OVER";
+        do Output.printString(s);
+        do s.dispose();
+        
+        do Output.moveCursor(11, 4);
+        let s = "Just like in real life, if you try to buy what you";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(12, 4);
+        let s = "can't afford, sooner or later you'll have to pay...";
+        do Output.printString(s);
+        do s.dispose();
+
+        do Output.moveCursor(15, 22);
+        let s = "Press R to Restart";
+        do Output.printString(s);
+        do s.dispose();
+
+        let key = 0;
+        while (~((key = 82) | (key = 114))) {
+            let key = Keyboard.keyPressed();
+        }
+        return;
+    }
+}
